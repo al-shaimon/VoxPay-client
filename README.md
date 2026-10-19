@@ -91,3 +91,16 @@ npm run dev
 npm run build
 ```
 Generates optimized static assets in `dist/`.
+
+---
+
+## 🌐 Deploying on Vercel
+
+When deploying to Vercel, add this Environment Variable in your Vercel Project Settings (**Settings > Environment Variables**):
+
+| Key | Example Value | Description |
+| :--- | :--- | :--- |
+| `VITE_API_URL` | `https://your-voxpay-backend.onrender.com` | Live deployed backend base URL (no trailing slash) |
+
+In development or if `VITE_API_URL` is omitted, the app defaults to `/api` which is automatically proxied to `http://localhost:8000` via [vite.config.js](file:///c:/Users/alsha/Desktop/VoxPay/frontend/vite.config.js).
+

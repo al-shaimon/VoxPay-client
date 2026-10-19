@@ -1,9 +1,10 @@
 // ML Model Prediction Service
 // Prepared for seamless integration with the ML Team's Fraud vs Trusted Classifier & Credit Scoring Bot
 
+import { apiUrl } from '../constants/api';
+
 export const ML_MODEL_CONFIG = {
-  // Connected to FastAPI backend with proxy
-  ENDPOINT: '/api/ml/predict-loan-risk',
+  ENDPOINT: apiUrl('/api/ml/predict-loan-risk'),
   USE_LOCAL_SIMULATOR: false,
   VERSION: 'v2.4-Shenzhen-FinTechathon-Ensemble'
 };

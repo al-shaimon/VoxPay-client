@@ -17,6 +17,7 @@ import EmergencyReliefModal from './components/EmergencyReliefModal';
 import MlSpecModal from './components/MlSpecModal';
 
 import { INITIAL_WALLET, INITIAL_TRANSACTIONS } from './constants/data';
+import { apiUrl } from './constants/api';
 import { zkpEngine } from './services/zkpSimulator';
 import { voiceEngine } from './services/voiceEngine';
 import confetti from 'canvas-confetti';
@@ -44,8 +45,8 @@ export default function App() {
     const fetchInitialData = async () => {
       try {
         const [walletRes, txRes] = await Promise.all([
-          fetch('/api/wallet'),
-          fetch('/api/transactions')
+          fetch(apiUrl('/api/wallet')),
+          fetch(apiUrl('/api/transactions'))
         ]);
         if (walletRes.ok) {
           const wData = await walletRes.json();
@@ -65,7 +66,7 @@ export default function App() {
   // Helper to sync transactions to backend asynchronously
   const syncTransactionToBackend = async (tx) => {
     try {
-      await fetch('/api/transactions', {
+      await fetch(apiUrl('/api/transactions'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -295,7 +296,7 @@ export default function App() {
 
     // Backend sync
     try {
-      await fetch('/api/ml/apply-loan', {
+      await fetch(apiUrl('/api/ml/apply-loan'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ amount, prediction })
@@ -357,7 +358,7 @@ export default function App() {
       setTransactions(prev => [newTx, ...prev]);
 
       try {
-        await fetch('/api/weather/trigger-disaster', {
+        await fetch(apiUrl('/api/weather/trigger-disaster'), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -381,7 +382,7 @@ export default function App() {
       }));
 
       try {
-        await fetch('/api/weather/reset', { method: 'POST' });
+        await fetch(apiUrl('/api/weather/reset'), { method: 'POST' });
       } catch (err) {
         console.warn('Backend weather reset offline', err);
       }
