@@ -2,9 +2,9 @@
 // Prepared for seamless integration with the ML Team's Fraud vs Trusted Classifier & Credit Scoring Bot
 
 export const ML_MODEL_CONFIG = {
-  // When the ML team provides their API, simply update this endpoint
-  ENDPOINT: 'https://api.voxpay.internal/v1/predict-loan-risk',
-  USE_LOCAL_SIMULATOR: true,
+  // Connected to FastAPI backend with proxy
+  ENDPOINT: '/api/ml/predict-loan-risk',
+  USE_LOCAL_SIMULATOR: false,
   VERSION: 'v2.4-Shenzhen-FinTechathon-Ensemble'
 };
 
@@ -93,13 +93,24 @@ class MLModelService {
     // If the ML team has deployed a live API endpoint:
     if (!ML_MODEL_CONFIG.USE_LOCAL_SIMULATOR) {
       try {
+        const payload = features ? { ...features, preset_profile: customProfile } : { preset_profile: customProfile };
         const response = await fetch(ML_MODEL_CONFIG.ENDPOINT, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(features)
+          body: JSON.stringify(payload)
         });
         if (response.ok) {
-          return await response.json();
+          const data = await response.json();
+          return {
+            decision: data.decision,
+            riskScore: data.risk_score ?? data.riskScore ?? 0.05,
+            creditScore: data.credit_score ?? data.creditScore ?? 780,
+            maxLoanApproved: data.approved_loan_limit ?? data.maxLoanApproved ?? 25000,
+            verdictText: data.verdict_text ?? data.verdictText ?? (data.decision === 'TRUSTED' ? 'স্বীকৃত বিশ্বস্ত গ্রাহক' : 'উচ্চ ঝুঁকি সনাক্ত হয়েছে'),
+            explanation: Array.isArray(data.explainability_reasons) ? data.explainability_reasons.join('। ') : (data.explanation || ''),
+            source: data.source || 'backend_api',
+            timestamp: data.timestamp || new Date().toISOString()
+          };
         }
       } catch (err) {
         console.warn('Live ML API unreachable, falling back to local ensemble model', err);

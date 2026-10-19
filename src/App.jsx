@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Navbar from './components/Navbar';
 import BottomNav from './components/BottomNav';
 import HomeScreen from './components/HomeScreen';
@@ -39,6 +39,51 @@ export default function App() {
   const [emergencyModalOpen, setEmergencyModalOpen] = useState(false);
   const [mlSpecModalOpen, setMlSpecModalOpen] = useState(false);
 
+  // Fetch persisted wallet and transactions on initial load
+  useEffect(() => {
+    const fetchInitialData = async () => {
+      try {
+        const [walletRes, txRes] = await Promise.all([
+          fetch('/api/wallet'),
+          fetch('/api/transactions')
+        ]);
+        if (walletRes.ok) {
+          const wData = await walletRes.json();
+          if (wData && wData.accountName) setWallet(wData);
+        }
+        if (txRes.ok) {
+          const tData = await txRes.json();
+          if (Array.isArray(tData) && tData.length > 0) setTransactions(tData);
+        }
+      } catch (err) {
+        console.warn('Backend offline on initial load, using local demo state', err);
+      }
+    };
+    fetchInitialData();
+  }, []);
+
+  // Helper to sync transactions to backend asynchronously
+  const syncTransactionToBackend = async (tx) => {
+    try {
+      await fetch('/api/transactions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: tx.type,
+          title: tx.title,
+          recipient: tx.recipient,
+          amount: tx.amount,
+          currency: tx.currency || '৳',
+          status: tx.status || 'Completed',
+          verifiedBy: tx.verifiedBy || 'Voice Biometric',
+          zkpHash: tx.zkpHash
+        })
+      });
+    } catch (e) {
+      console.warn('Backend transaction sync failed (offline)', e);
+    }
+  };
+
   // Trigger Voice Command from Hero bar or chips
   const handleTriggerVoiceCommand = (text, dialect) => {
     setVoiceTranscript(text);
@@ -70,6 +115,7 @@ export default function App() {
         zkpHash: zkpEngine.generateTxAuditHash(parsed)
       };
       setTransactions(prev => [newTx, ...prev]);
+      syncTransactionToBackend(newTx);
     } else if (parsed.intent === 'REQUEST_LOAN') {
       const loanAmt = parsed.amount || 5000;
       setWallet(prev => ({
@@ -98,6 +144,7 @@ export default function App() {
         zkpHash: zkpEngine.generateTxAuditHash(parsed)
       };
       setTransactions(prev => [newTx, ...prev]);
+      syncTransactionToBackend(newTx);
     } else if (parsed.intent === 'PAY_UTILITY') {
       const amount = parsed.amount || 850;
       setWallet(prev => ({
@@ -118,6 +165,7 @@ export default function App() {
         zkpHash: zkpEngine.generateTxAuditHash(parsed)
       };
       setTransactions(prev => [newTx, ...prev]);
+      syncTransactionToBackend(newTx);
     } else if (parsed.intent === 'ECNY_REMITTANCE') {
       const cny = parsed.amount || 200;
       const bdt = Math.round(cny * 16.90);
@@ -140,6 +188,7 @@ export default function App() {
         zkpHash: zkpEngine.generateTxAuditHash(parsed)
       };
       setTransactions(prev => [newTx, ...prev]);
+      syncTransactionToBackend(newTx);
     } else if (parsed.intent === 'EMERGENCY_RELIEF') {
       handleClaimEmergencyAid(5000);
     }
@@ -197,10 +246,11 @@ export default function App() {
       zkpHash: zkpEngine.generateTxAuditHash({ recipient, amount })
     };
     setTransactions(prev => [newTx, ...prev]);
+    syncTransactionToBackend(newTx);
   };
 
   // Apply Loan from Credit Score Section
-  const handleApplyLoan = (amount, prediction) => {
+  const handleApplyLoan = async (amount, prediction) => {
     setWallet(prev => ({
       ...prev,
       bdtBalance: prev.bdtBalance + amount,
@@ -242,6 +292,17 @@ export default function App() {
       zkpHash: zkpEngine.generateTxAuditHash({ amount, prediction })
     };
     setTransactions(prev => [newTx, ...prev]);
+
+    // Backend sync
+    try {
+      await fetch('/api/ml/apply-loan', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ amount, prediction })
+      });
+    } catch (err) {
+      console.warn('Backend loan application sync offline', err);
+    }
   };
 
   // Cross-Border Remittance Success
@@ -265,10 +326,11 @@ export default function App() {
       zkpHash: zkpEngine.generateTxAuditHash({ cnyAmount, bdtAmount })
     };
     setTransactions(prev => [newTx, ...prev]);
+    syncTransactionToBackend(newTx);
   };
 
   // Disaster Trigger: Freeze Loan & Disburse Crop Insurance
-  const handleDisasterTrigger = (scenario) => {
+  const handleDisasterTrigger = async (scenario) => {
     if (scenario.riskLevel !== 'NORMAL') {
       setWallet(prev => ({
         ...prev,
@@ -293,6 +355,21 @@ export default function App() {
         zkpHash: zkpEngine.generateTxAuditHash({ scenario })
       };
       setTransactions(prev => [newTx, ...prev]);
+
+      try {
+        await fetch('/api/weather/trigger-disaster', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            scenario_id: scenario.id,
+            title: scenario.title,
+            risk_level: scenario.riskLevel,
+            insurance_amount: 8500.0
+          })
+        });
+      } catch (err) {
+        console.warn('Backend weather trigger offline', err);
+      }
     } else {
       setWallet(prev => ({
         ...prev,
@@ -302,6 +379,12 @@ export default function App() {
           disasterFreezeReason: null
         }
       }));
+
+      try {
+        await fetch('/api/weather/reset', { method: 'POST' });
+      } catch (err) {
+        console.warn('Backend weather reset offline', err);
+      }
     }
   };
 
@@ -325,6 +408,7 @@ export default function App() {
       zkpHash: zkpEngine.generateTxAuditHash({ amount })
     };
     setTransactions(prev => [newTx, ...prev]);
+    syncTransactionToBackend(newTx);
   };
 
   return (

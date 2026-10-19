@@ -73,7 +73,17 @@ export default function CreditScoringSection({
                 : 'bg-slate-900 text-slate-400 hover:text-white'
             }`}
           >
-            🟢 বিশ্বস্ত কৃষক (Karim)
+            🟢 কৃষক (Karim)
+          </button>
+          <button
+            onClick={() => handleProfileChange('profile_gig_worker')}
+            className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition ${
+              selectedProfileId === 'profile_gig_worker'
+                ? 'bg-blue-600 text-white shadow-sm'
+                : 'bg-slate-900 text-slate-400 hover:text-white'
+            }`}
+          >
+            🔵 গিগ (Salma)
           </button>
           <button
             onClick={() => handleProfileChange('profile_fraud_ring')}
@@ -83,7 +93,7 @@ export default function CreditScoringSection({
                 : 'bg-slate-900 text-slate-400 hover:text-white'
             }`}
           >
-            🔴 ফ্রড রিং (Fraud Test)
+            🔴 ফ্রড রিং
           </button>
         </div>
       </div>
@@ -130,6 +140,14 @@ export default function CreditScoringSection({
               <p className="text-xs font-semibold text-slate-200 mt-1">
                 {prediction.verdictText}
               </p>
+              <div className="mt-2 flex items-center justify-center space-x-1.5 text-[10px] font-mono text-slate-400">
+                <span className="px-2 py-0.5 rounded-md bg-slate-900 border border-slate-800">
+                  ডিফল্ট ঝুঁকি: {((prediction.riskScore || 0) * 100).toFixed(1)}%
+                </span>
+                <span className="px-2 py-0.5 rounded-md bg-slate-900 border border-slate-800 text-cyan-300">
+                  vhre-v3 (Render)
+                </span>
+              </div>
             </div>
 
             {/* Explanation */}
