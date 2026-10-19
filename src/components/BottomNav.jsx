@@ -3,16 +3,17 @@ import { Home, Landmark, Mic, CloudRain, Clock } from 'lucide-react';
 
 export default function BottomNav({ activeTab, setActiveTab, onVoiceClick }) {
   const tabs = [
-    { id: 'overview', label: 'হোম', icon: Home },
-    { id: 'loan', label: 'লোন ও স্কোর', icon: Landmark },
-    { id: 'voice', label: 'ভয়েস পে', icon: Mic, isCenter: true },
-    { id: 'weather', label: 'ওয়েদার', icon: CloudRain },
-    { id: 'history', label: 'স্টেটমেন্ট', icon: Clock },
+    { id: 'overview', label: 'হোম',       icon: Home },
+    { id: 'loan',     label: 'লোন',       icon: Landmark },
+    { id: 'voice',    label: 'ভয়েস',      icon: Mic,      isCenter: true },
+    { id: 'weather',  label: 'ওয়েদার',    icon: CloudRain },
+    { id: 'history',  label: 'ইতিহাস',    icon: Clock },
   ];
 
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-slate-900/95 backdrop-blur-lg border-t border-slate-800 shadow-2xl">
-      <div className="flex items-center justify-around h-16 px-2 max-w-md mx-auto">
+    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40"
+      style={{ background: 'rgba(7,11,20,0.95)', backdropFilter: 'blur(24px)', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+      <div className="flex items-center justify-around h-16 px-3 max-w-md mx-auto">
         {tabs.map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
@@ -22,14 +23,17 @@ export default function BottomNav({ activeTab, setActiveTab, onVoiceClick }) {
               <button
                 key={tab.id}
                 onClick={onVoiceClick}
-                className="relative -top-3.5 flex flex-col items-center group focus:outline-none"
+                className="relative -top-5 flex flex-col items-center gap-0.5"
               >
-                <div className="w-13 h-13 rounded-full bg-gradient-to-tr from-brand-600 via-brand-500 to-pink-500 text-white flex items-center justify-center shadow-lg shadow-brand-500/40 ring-4 ring-slate-900 group-hover:scale-105 group-active:scale-95 transition-all">
-                  <Mic size={22} className="animate-pulse" />
+                <div className="w-14 h-14 rounded-full flex items-center justify-center ring-4 transition-transform active:scale-95"
+                  style={{
+                    background: 'linear-gradient(135deg, #e2136e, #9333ea)',
+                    boxShadow: '0 8px 32px -4px rgba(226,19,110,0.6)',
+                    ringColor: '#070b14'
+                  }}>
+                  <Mic size={22} className="text-white animate-blink" />
                 </div>
-                <span className="text-[10px] font-bold text-brand-400 mt-0.5">
-                  ভয়েস পে
-                </span>
+                <span className="text-[10px] font-bold" style={{ color: '#f472b6' }}>ভয়েস</span>
               </button>
             );
           }
@@ -38,14 +42,14 @@ export default function BottomNav({ activeTab, setActiveTab, onVoiceClick }) {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex flex-col items-center justify-center flex-1 py-1 transition-all ${
-                isActive ? 'text-brand-400 font-bold' : 'text-slate-400 hover:text-slate-200'
-              }`}
+              className="flex flex-col items-center gap-1 flex-1 py-1 transition-all"
             >
-              <div className={`p-1 rounded-xl transition ${isActive ? 'bg-brand-500/15' : ''}`}>
-                <Icon size={19} className={isActive ? 'text-brand-400' : 'text-slate-400'} />
+              <div className="p-1.5 rounded-xl transition-all"
+                style={isActive ? { background: 'rgba(226,19,110,0.15)' } : {}}>
+                <Icon size={19} style={{ color: isActive ? '#f472b6' : '#475569' }} />
               </div>
-              <span className="text-[10px] tracking-tight mt-0.5">
+              <span className="text-[10px] font-semibold tracking-tight"
+                style={{ color: isActive ? '#f472b6' : '#475569' }}>
                 {tab.label}
               </span>
             </button>
