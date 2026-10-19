@@ -1,17 +1,19 @@
 import React, { useState } from 'react';
-import { 
-  ShieldCheck, AlertOctagon, Cpu, CheckCircle2, 
-  Sparkles, Smartphone, Zap, Users, ShieldAlert, ArrowRight 
+import {
+  ShieldCheck, AlertOctagon, Cpu, CheckCircle2,
+  Sparkles, Zap, ShieldAlert, ArrowRight, TrendingUp
 } from 'lucide-react';
 import { ALTERNATIVE_DATA_FACTORS } from '../constants/data';
 import { mlModelService, PRESET_USER_PROFILES } from '../services/mlModelService';
 import { voiceEngine } from '../services/voiceEngine';
 
-export default function CreditScoringSection({ 
-  wallet, 
-  onApplyLoan, 
-  soundEnabled 
-}) {
+const PROFILES = [
+  { id: 'profile_trusted_farmer', label: 'করিম মিয়া', sub: 'কৃষক · Trusted',   emoji: '🟢', accent: '#10b981' },
+  { id: 'profile_gig_worker',     label: 'সালমা আক্তার', sub: 'গিগ ওয়ার্কার',  emoji: '🔵', accent: '#3b82f6' },
+  { id: 'profile_fraud_ring',     label: 'সন্দেহভাজন',  sub: 'ফ্রড রিং',        emoji: '🔴', accent: '#ef4444' },
+];
+
+export default function CreditScoringSection({ wallet, onApplyLoan, soundEnabled }) {
   const [selectedProfileId, setSelectedProfileId] = useState('profile_trusted_farmer');
   const [prediction, setPrediction] = useState(PRESET_USER_PROFILES[0].expectedResult);
   const [isInferring, setIsInferring] = useState(false);
@@ -20,9 +22,7 @@ export default function CreditScoringSection({
   const handleProfileChange = async (profileId) => {
     setSelectedProfileId(profileId);
     setIsInferring(true);
-    if (soundEnabled) {
-      voiceEngine.playSoundboxChime();
-    }
+    if (soundEnabled) voiceEngine.playSoundboxChime();
 
     const result = await mlModelService.predictLoanRisk(null, profileId);
     setPrediction(result);
@@ -32,136 +32,117 @@ export default function CreditScoringSection({
       if (result.decision === 'TRUSTED') {
         voiceEngine.speakText(`এআই ক্রেডিট স্কোর ${result.creditScore}। আপনি লোন অনুমোদিত।`, 'bn-BD', false);
       } else {
-        voiceEngine.speakText('সন্দেহজনক কার্যক্রম সনাক্ত হয়েছে। লোন আবেদন স্থগিত।', 'bn-BD', false);
+        voiceEngine.speakText('সন্দেহজনক কার্যক্রম সনাক্ত। লোন আবেদন স্থগিত।', 'bn-BD', false);
       }
     }
   };
 
   const isTrusted = prediction.decision === 'TRUSTED';
   const loanOptions = [5000, 10000, 15000, 25000];
+  const scorePercent = ((prediction.creditScore - 300) / 600) * 100;
 
   return (
-    <div className="space-y-6 animate-fadeIn">
-      
-      {/* Top Banner & Demo Switcher */}
-      <div className="rounded-3xl bg-slate-900 border border-slate-800 p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xl">
-        <div>
-          <div className="flex items-center space-x-2">
-            <span className="p-1.5 rounded-xl bg-brand-500/20 text-brand-400">
-              <Cpu size={18} />
-            </span>
-            <h3 className="text-base sm:text-lg font-bold text-white">
-              AI বিকল্প ক্রেডিট স্কোরিং ও ঝুঁকি নিরূপণ
-            </h3>
-          </div>
-          <p className="text-xs text-slate-400 mt-0.5">
-            মোবাইল রিচার্জ, বিদ্যুৎ বিল ও পিয়ার ট্রানজেকশন ভিত্তিক স্মার্ট লোন অনুমোদন
-          </p>
-        </div>
+    <div className="space-y-5 animate-fadeIn">
 
-        {/* Demo Switcher Pills */}
-        <div className="flex items-center space-x-2 bg-slate-950 p-1.5 rounded-2xl border border-slate-800 self-start sm:self-auto">
-          <span className="text-[11px] font-semibold text-slate-400 px-2 flex items-center space-x-1">
-            <Sparkles size={12} className="text-yellow-400" />
-            <span className="hidden sm:inline">ML টেস্ট:</span>
-          </span>
-          <button
-            onClick={() => handleProfileChange('profile_trusted_farmer')}
-            className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition ${
-              selectedProfileId === 'profile_trusted_farmer'
-                ? 'bg-emerald-600 text-white shadow-sm'
-                : 'bg-slate-900 text-slate-400 hover:text-white'
-            }`}
-          >
-            🟢 কৃষক (Karim)
-          </button>
-          <button
-            onClick={() => handleProfileChange('profile_gig_worker')}
-            className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition ${
-              selectedProfileId === 'profile_gig_worker'
-                ? 'bg-blue-600 text-white shadow-sm'
-                : 'bg-slate-900 text-slate-400 hover:text-white'
-            }`}
-          >
-            🔵 গিগ (Salma)
-          </button>
-          <button
-            onClick={() => handleProfileChange('profile_fraud_ring')}
-            className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition ${
-              selectedProfileId === 'profile_fraud_ring'
-                ? 'bg-red-600 text-white shadow-sm'
-                : 'bg-slate-900 text-slate-400 hover:text-white'
-            }`}
-          >
-            🔴 ফ্রড রিং
-          </button>
+      {/* ── Header ─────────────────────────────────────────── */}
+      <div className="card">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl flex items-center justify-center" style={{ background: 'rgba(226,19,110,0.15)' }}>
+              <Cpu size={20} style={{ color: '#f472b6' }} />
+            </div>
+            <div>
+              <h2 className="text-base font-bold text-white">AI বিকল্প ক্রেডিট স্কোরিং</h2>
+              <p className="text-xs" style={{ color: '#64748b' }}>মোবাইল রিচার্জ, বিল ও পিয়ার ট্রানজেকশন বিশ্লেষণ</p>
+            </div>
+          </div>
+
+          {/* Profile Switcher */}
+          <div className="flex items-center gap-1.5 p-1.5 rounded-2xl flex-shrink-0" style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.07)' }}>
+            <span className="text-[10px] font-bold uppercase tracking-wider px-2" style={{ color: '#475569' }}>
+              <Sparkles size={10} className="inline mr-1 text-yellow-400" />ML টেস্ট:
+            </span>
+            {PROFILES.map((p) => (
+              <button
+                key={p.id}
+                onClick={() => handleProfileChange(p.id)}
+                disabled={isInferring}
+                className="px-3 py-1.5 rounded-xl text-xs font-semibold transition-all disabled:opacity-50"
+                style={selectedProfileId === p.id
+                  ? { background: `${p.accent}25`, color: p.accent, border: `1px solid ${p.accent}40` }
+                  : { color: '#64748b', background: 'transparent', border: '1px solid transparent' }}
+              >
+                {p.emoji} {p.label.split(' ')[0]}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
-      {/* Main Responsive Grid: Laptop (2 Columns) / Mobile (Stacked) */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
-        
-        {/* Left Column (5 Cols): Score Wheel & Loan Application Card */}
-        <div className="lg:col-span-5 flex flex-col justify-between rounded-3xl bg-slate-900 border border-slate-800 p-5 sm:p-6 shadow-xl space-y-5">
-          
-          <div>
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">
-                মডেল ফলাফল (AI Verdict)
+      {/* ── Main Grid ──────────────────────────────────────── */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+
+        {/* Left: Score + Loan Apply */}
+        <div className="lg:col-span-5 card space-y-4">
+
+          {/* Verdict Badge */}
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold uppercase tracking-wider" style={{ color: '#475569' }}>AI Verdict</span>
+            {isTrusted ? (
+              <span className="badge badge-green flex items-center gap-1">
+                <CheckCircle2 size={11} /> Trusted · Low Risk
               </span>
-              {isTrusted ? (
-                <span className="px-2.5 py-1 rounded-full bg-emerald-950 text-emerald-400 border border-emerald-800 text-xs font-bold flex items-center space-x-1">
-                  <CheckCircle2 size={13} />
-                  <span>TRUSTED (Low Risk)</span>
-                </span>
-              ) : (
-                <span className="px-2.5 py-1 rounded-full bg-red-950 text-red-400 border border-red-800 text-xs font-bold flex items-center space-x-1">
-                  <AlertOctagon size={13} />
-                  <span>FRAUD RISK (High)</span>
-                </span>
-              )}
-            </div>
-
-            {/* Score Number Display */}
-            <div className={`text-center p-5 rounded-2xl border my-3 ${
-              isTrusted 
-                ? 'bg-gradient-to-b from-slate-950 to-emerald-950/20 border-emerald-500/30' 
-                : 'bg-gradient-to-b from-slate-950 to-red-950/20 border-red-500/30'
-            }`}>
-              <span className="text-xs text-slate-400 font-medium">এআই বিকল্প ক্রেডিট স্কোর</span>
-              <div className="flex items-baseline justify-center space-x-1.5 mt-1">
-                <span className={`text-5xl font-black tracking-tight ${
-                  isTrusted ? 'text-emerald-400' : 'text-red-400'
-                }`}>
-                  {prediction.creditScore}
-                </span>
-                <span className="text-slate-500 font-mono text-sm">/ ৯০০</span>
-              </div>
-              <p className="text-xs font-semibold text-slate-200 mt-1">
-                {prediction.verdictText}
-              </p>
-              <div className="mt-2 flex items-center justify-center space-x-1.5 text-[10px] font-mono text-slate-400">
-                <span className="px-2 py-0.5 rounded-md bg-slate-900 border border-slate-800">
-                  ডিফল্ট ঝুঁকি: {((prediction.riskScore || 0) * 100).toFixed(1)}%
-                </span>
-                <span className="px-2 py-0.5 rounded-md bg-slate-900 border border-slate-800 text-cyan-300">
-                  vhre-v3 (Render)
-                </span>
-              </div>
-            </div>
-
-            {/* Explanation */}
-            <p className="text-xs text-slate-300 leading-relaxed bg-slate-950/70 p-3 rounded-2xl border border-slate-800">
-              {prediction.explanation}
-            </p>
+            ) : (
+              <span className="badge badge-red flex items-center gap-1">
+                <AlertOctagon size={11} /> Fraud Risk · High
+              </span>
+            )}
           </div>
 
-          {/* Loan Amount Selector & CTA */}
+          {/* Score Display */}
+          <div className="rounded-2xl p-5 text-center space-y-2"
+            style={isTrusted
+              ? { background: 'rgba(16,185,129,0.06)', border: '1px solid rgba(16,185,129,0.2)' }
+              : { background: 'rgba(239,68,68,0.06)',  border: '1px solid rgba(239,68,68,0.2)' }}>
+            <p className="text-[11px] text-slate-400">বিকল্প AI ক্রেডিট স্কোর</p>
+            <div>
+              {isInferring ? (
+                <div className="flex items-center justify-center gap-2 py-3">
+                  <Zap size={20} className="animate-blink" style={{ color: '#f472b6' }} />
+                  <span className="text-sm text-slate-400 animate-blink">মডেল বিশ্লেষণ করছে...</span>
+                </div>
+              ) : (
+                <span className="text-6xl font-black" style={{ color: isTrusted ? '#10b981' : '#ef4444' }}>
+                  {prediction.creditScore}
+                </span>
+              )}
+              <p className="text-slate-500 text-sm">/ ৯০০</p>
+            </div>
+            <div className="progress-bar">
+              <div className="progress-fill" style={{ width: `${scorePercent}%`, background: isTrusted ? 'linear-gradient(90deg, #10b981, #34d399)' : 'linear-gradient(90deg, #ef4444, #f87171)' }} />
+            </div>
+            <p className="text-sm font-semibold text-white">{prediction.verdictText}</p>
+            <div className="flex items-center justify-center gap-2 text-[10px] font-mono">
+              <span className="px-2 py-0.5 rounded-md" style={{ background: 'rgba(255,255,255,0.06)', color: '#94a3b8' }}>
+                ডিফল্ট ঝুঁকি: {((prediction.riskScore || 0) * 100).toFixed(1)}%
+              </span>
+              <span className="px-2 py-0.5 rounded-md" style={{ background: 'rgba(6,182,212,0.1)', color: '#22d3ee' }}>
+                vhre-v3 · Render
+              </span>
+            </div>
+          </div>
+
+          {/* Explanation */}
+          <p className="text-xs leading-relaxed px-3 py-2.5 rounded-xl" style={{ background: 'rgba(255,255,255,0.03)', color: '#94a3b8', border: '1px solid rgba(255,255,255,0.05)' }}>
+            {prediction.explanation}
+          </p>
+
+          {/* Loan Apply or Blocked */}
           {isTrusted ? (
-            <div className="space-y-3 pt-3 border-t border-slate-800">
+            <div className="space-y-3 pt-3" style={{ borderTop: '1px solid rgba(255,255,255,0.07)' }}>
               <div className="flex items-center justify-between text-xs">
                 <span className="font-bold text-white">ঋণের পরিমাণ:</span>
-                <span className="text-brand-400 font-semibold">০% সুদ (প্রথম ৩০ দিন)</span>
+                <span className="font-semibold" style={{ color: '#f472b6' }}>০% সুদ (প্রথম ৩০ দিন)</span>
               </div>
 
               <div className="grid grid-cols-4 gap-2">
@@ -169,90 +150,80 @@ export default function CreditScoringSection({
                   <button
                     key={amt}
                     onClick={() => setSelectedAmount(amt)}
-                    className={`py-2 px-1 rounded-xl text-xs font-bold transition text-center ${
-                      selectedAmount === amt
-                        ? 'bg-brand-500 text-white shadow-md'
-                        : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
-                    }`}
+                    className="py-2.5 px-1 rounded-xl text-xs font-bold transition-all text-center"
+                    style={selectedAmount === amt
+                      ? { background: 'rgba(226,19,110,0.2)', color: '#f472b6', border: '1px solid rgba(226,19,110,0.4)' }
+                      : { background: 'rgba(255,255,255,0.04)', color: '#94a3b8', border: '1px solid rgba(255,255,255,0.07)' }}
                   >
                     ৳{amt >= 1000 ? `${amt / 1000}K` : amt}
                   </button>
                 ))}
               </div>
 
-              <div className="p-2.5 rounded-xl bg-slate-950 border border-slate-800 flex justify-between text-xs">
-                <span className="text-slate-400">মাসিক কিস্তি (৩ মাস):</span>
+              <div className="flex justify-between items-center text-xs px-3 py-2.5 rounded-xl"
+                style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                <span style={{ color: '#64748b' }}>মাসিক কিস্তি (৩ মাস):</span>
                 <span className="font-bold text-white">৳{Math.round((selectedAmount * 1.02) / 3)}/মাস</span>
               </div>
 
               <button
                 onClick={() => onApplyLoan(selectedAmount, prediction)}
                 disabled={isInferring}
-                className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-brand-600 via-brand-500 to-pink-600 hover:from-brand-500 hover:to-pink-500 text-white font-bold text-xs sm:text-sm shadow-lg shadow-brand-500/25 transition active:scale-98 flex items-center justify-center space-x-2"
+                className="w-full btn-primary py-3 text-sm disabled:opacity-50"
               >
-                <ShieldCheck size={16} />
-                <span>৳{selectedAmount.toLocaleString('en-IN')} তাৎক্ষণিক ঋণ গ্রহণ করুন</span>
+                <ShieldCheck size={15} />
+                ৳{selectedAmount.toLocaleString('en-IN')} তাৎক্ষণিক ঋণ নিন
               </button>
             </div>
           ) : (
-            <div className="p-4 rounded-2xl bg-red-950/30 border border-red-500/30 text-center space-y-2">
-              <ShieldAlert size={28} className="mx-auto text-red-400" />
-              <h4 className="text-xs font-bold text-white">লোন আবেদন সাময়িক স্থগিত</h4>
-              <p className="text-[11px] text-slate-400">
-                অস্বাভাবিক সিম ও ট্রানজেকশন অ্যাক্টিভিটির কারণে লোন সুবিধা সাময়িক নিষ্ক্রিয়।
+            <div className="text-center p-5 rounded-2xl space-y-2" style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)' }}>
+              <ShieldAlert size={30} className="mx-auto" style={{ color: '#f87171' }} />
+              <h4 className="text-sm font-bold text-white">লোন আবেদন স্থগিত</h4>
+              <p className="text-xs" style={{ color: '#94a3b8' }}>
+                অস্বাভাবিক ট্রানজেকশন অ্যাক্টিভিটি সনাক্ত হয়েছে।
               </p>
             </div>
           )}
-
         </div>
 
-        {/* Right Column (7 Cols): 4 Alternative Data Pillars & Weights */}
-        <div className="lg:col-span-7 rounded-3xl bg-slate-900 border border-slate-800 p-5 sm:p-6 shadow-xl space-y-4">
+        {/* Right: Alternative Data Factors */}
+        <div className="lg:col-span-7 card space-y-4">
           <div className="flex items-center justify-between">
-            <h4 className="text-sm font-bold text-white uppercase tracking-wider">
-              বিকল্প ডেটা প্যারামিটারসমূহ (Alternative Data Pillars)
-            </h4>
-            <span className="text-xs font-mono text-brand-400">মোট ওয়েট: ১০০%</span>
+            <h3 className="text-sm font-bold text-white">বিকল্প ডেটা প্যারামিটার</h3>
+            <span className="text-xs font-mono" style={{ color: '#f472b6' }}>মোট ওয়েট: ১০০%</span>
           </div>
 
-          <div className="space-y-3.5">
+          <div className="space-y-3">
             {ALTERNATIVE_DATA_FACTORS.map((factor) => (
-              <div 
-                key={factor.id}
-                className="p-3.5 rounded-2xl bg-slate-950/60 border border-slate-800 hover:border-slate-700 transition"
-              >
-                <div className="flex items-center justify-between mb-1.5">
-                  <div className="flex items-center space-x-2">
-                    <span className="text-xs sm:text-sm font-bold text-white">{factor.name}</span>
-                    <span className="text-[10px] text-slate-400 font-medium hidden sm:inline">
-                      ({factor.enName})
-                    </span>
+              <div key={factor.id} className="p-4 rounded-2xl transition-all"
+                style={{ background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                <div className="flex items-center justify-between mb-2">
+                  <div>
+                    <span className="text-sm font-bold text-white">{factor.name}</span>
+                    <span className="text-[11px] ml-1.5" style={{ color: '#475569' }}>({factor.enName})</span>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <span className="text-[10px] text-slate-400 font-mono">ওয়েট {factor.weight}</span>
-                    <span className="text-xs font-extrabold text-brand-400 font-mono">
-                      {factor.score}/১০০
-                    </span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-mono" style={{ color: '#475569' }}>ওয়েট {factor.weight}</span>
+                    <span className="text-sm font-black" style={{ color: '#f472b6' }}>{factor.score}/১০০</span>
                   </div>
                 </div>
 
-                <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
-                  <div 
-                    className="bg-gradient-to-r from-brand-500 to-cyan-400 h-full rounded-full transition-all duration-700"
-                    style={{ width: `${factor.score}%` }}
-                  />
+                <div className="progress-bar mb-2">
+                  <div className="progress-fill" style={{ width: `${factor.score}%` }} />
                 </div>
 
-                <p className="text-xs text-slate-400 mt-2 leading-relaxed">
-                  {factor.detail}
-                </p>
+                <p className="text-xs leading-relaxed" style={{ color: '#64748b' }}>{factor.detail}</p>
               </div>
             ))}
+          </div>
+
+          {/* Research Disclaimer */}
+          <div className="p-3 rounded-xl text-[11px] leading-relaxed" style={{ background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.2)', color: '#fbbf24' }}>
+            <strong>⚠️ গবেষণা মডেল:</strong> এই মডেল তাইওয়ান ক্রেডিট কার্ড ডেটাসেটে প্রশিক্ষিত। বাংলাদেশের বাস্তব মাইক্রো-ফিনান্সে প্রয়োগের আগে স্থানীয় ডেটায় পুনরায় প্রশিক্ষণ প্রয়োজন।
           </div>
         </div>
 
       </div>
-
     </div>
   );
 }

@@ -1,17 +1,17 @@
-import React, { useState } from 'react';
-import { 
-  Volume2, VolumeX, Eye, EyeOff, Globe, Sparkles, 
-  ShieldCheck, ChevronDown, CheckCircle2, Code2, 
-  Home, Landmark, Mic, CloudRain, Clock 
+import React, { useState, useRef, useEffect } from 'react';
+import {
+  Volume2, VolumeX, Globe, Sparkles,
+  ChevronDown, CheckCircle2, Code2,
+  Home, Landmark, Mic, CloudRain, Clock, Eye, EyeOff
 } from 'lucide-react';
 import { DIALECTS } from '../constants/data';
 import { voiceEngine } from '../services/voiceEngine';
 
-export default function Navbar({ 
-  wallet, 
-  selectedDialect, 
-  setSelectedDialect, 
-  soundEnabled, 
+export default function Navbar({
+  wallet,
+  selectedDialect,
+  setSelectedDialect,
+  soundEnabled,
   setSoundEnabled,
   activeTab,
   setActiveTab,
@@ -19,141 +19,150 @@ export default function Navbar({
   onOpenMlSpec
 }) {
   const [showBalance, setShowBalance] = useState(false);
-  const [balanceTapping, setBalanceTapping] = useState(false);
   const [dialectDropdownOpen, setDialectDropdownOpen] = useState(false);
-
-  const handleBalanceTap = () => {
-    setBalanceTapping(true);
-    if (soundEnabled) {
-      voiceEngine.playSoundboxChime();
-    }
-    setShowBalance(prev => !prev);
-    setTimeout(() => setBalanceTapping(false), 400);
-  };
+  const balanceTimerRef = useRef(null);
 
   const currentDialectObj = DIALECTS.find(d => d.id === selectedDialect) || DIALECTS[0];
 
+  const handleToggleBalance = () => {
+    if (showBalance) {
+      setShowBalance(false);
+      if (balanceTimerRef.current) clearTimeout(balanceTimerRef.current);
+    } else {
+      setShowBalance(true);
+      if (soundEnabled) voiceEngine.playSoundboxChime();
+      if (balanceTimerRef.current) clearTimeout(balanceTimerRef.current);
+      // Auto-hide balance after 7 seconds just like bKash / Nagad
+      balanceTimerRef.current = setTimeout(() => {
+        setShowBalance(false);
+      }, 7000);
+    }
+  };
+
+  useEffect(() => {
+    return () => {
+      if (balanceTimerRef.current) clearTimeout(balanceTimerRef.current);
+    };
+  }, []);
+
   const navLinks = [
-    { id: 'overview', label: 'ওভারভিউ (Overview)', icon: Home },
-    { id: 'loan', label: 'এআই লোন ও স্কোর', icon: Landmark },
-    { id: 'voice', label: 'ভয়েস পে', icon: Mic },
-    { id: 'weather', label: 'ওয়েদার শিল্ড', icon: CloudRain },
-    { id: 'history', label: 'স্টেটমেন্ট', icon: Clock },
+    { id: 'overview', label: 'হোম',       icon: Home },
+    { id: 'loan',     label: 'AI লোন',    icon: Landmark },
+    { id: 'voice',    label: 'ভয়েস পে',   icon: Mic },
+    { id: 'weather',  label: 'ওয়েদার',    icon: CloudRain },
+    { id: 'history',  label: 'স্টেটমেন্ট', icon: Clock },
   ];
 
   return (
-    <header className="sticky top-0 z-40 w-full bg-slate-900/95 backdrop-blur-md border-b border-slate-800">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        
-        {/* Main Navbar Row */}
-        <div className="flex items-center justify-between h-16 sm:h-20">
-          
-          {/* Brand Logo & Tagline */}
-          <div className="flex items-center space-x-3">
-            <div className="flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-gradient-to-tr from-brand-600 via-brand-500 to-pink-500 shadow-md shadow-brand-500/25">
-              <span className="text-white font-extrabold text-lg sm:text-xl tracking-tight">V</span>
-            </div>
-            
-            <div>
-              <div className="flex items-center space-x-2">
-                <span className="text-lg sm:text-2xl font-black tracking-tight text-white">
-                  Vox<span className="text-brand-400">Pay</span>
-                </span>
-                <span className="hidden sm:inline-flex items-center px-2 py-0.5 text-[10px] sm:text-xs font-semibold rounded-full bg-brand-500/15 text-brand-300 border border-brand-500/30">
-                  Voice-First MFS
-                </span>
-                <span className="hidden xl:inline-flex items-center px-2 py-0.5 text-[10px] font-medium rounded-full bg-cyan-950 text-cyan-300 border border-cyan-800">
-                  🇨🇳 Shenzhen FinTechathon
-                </span>
+    <header className="sticky top-0 z-40 w-full overflow-hidden" style={{ background: 'rgba(7,11,20,0.92)', backdropFilter: 'blur(24px)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+
+        {/* ── Main Top Row ──────────────────────────────────── */}
+        <div className="flex items-center justify-between h-14 sm:h-16">
+
+          {/* Brand Logo */}
+          <div className="flex items-center space-x-2.5 shrink-0">
+            <div className="relative">
+              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-2xl flex items-center justify-center shadow-lg" style={{ background: 'linear-gradient(135deg, #e2136e, #9333ea)' }}>
+                <span className="text-white font-black text-sm sm:text-base">V</span>
               </div>
-              <p className="text-[11px] text-slate-400 font-medium hidden md:block">
-                ভয়েস বায়োমেট্রিক • এআই অল্টারনেটিভ ক্রেডিট স্কোর • ZKP প্রাইভেসি
-              </p>
+              <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2" style={{ borderColor: '#070b14' }} />
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="text-base sm:text-lg font-black tracking-tight text-white">
+                Vox<span style={{ color: '#e2136e' }}>Pay</span>
+              </span>
+              <span className="badge badge-brand hidden md:inline-flex text-[10px]">Voice-First MFS</span>
             </div>
           </div>
 
-          {/* Center: bKash Tap to Check Balance Capsule */}
-          <div className="flex items-center">
+          {/* Desktop Balance Pill (Hidden on Mobile, Clean on Laptop) */}
+          <div className="hidden md:flex items-center">
             <button
-              onClick={handleBalanceTap}
-              className={`relative overflow-hidden group flex items-center bg-slate-800/90 hover:bg-slate-800 text-white rounded-full px-3.5 sm:px-5 py-1.5 sm:py-2 border border-brand-500/40 shadow-inner transition-all duration-300 ${
-                balanceTapping ? 'scale-95' : 'hover:scale-102'
-              }`}
-              title="ট্যাপ করে ব্যালেন্স দেখুন"
+              onClick={handleToggleBalance}
+              className="flex items-center gap-2.5 px-3.5 py-1.5 rounded-2xl transition-all duration-300 hover:scale-[1.02] active:scale-95"
+              style={{
+                background: showBalance ? 'rgba(226,19,110,0.12)' : 'rgba(255,255,255,0.05)',
+                border: showBalance ? '1px solid rgba(226,19,110,0.3)' : '1px solid rgba(255,255,255,0.09)',
+                boxShadow: showBalance ? '0 0 24px -6px rgba(226,19,110,0.3)' : 'none'
+              }}
+              title="ব্যালেন্স জানতে ক্লিক করুন"
             >
-              <div className="w-6 h-6 rounded-full bg-brand-500 text-white flex items-center justify-center mr-2 shadow-sm">
-                <span className="text-xs font-bold font-mono">৳</span>
-              </div>
-
-              <div className="text-left select-none">
-                <p className="text-[9px] sm:text-[10px] text-brand-300 font-semibold uppercase tracking-wider">
-                  {showBalance ? 'VoxPay ওয়ালেট' : 'ব্যালেন্স দেখতে ট্যাপ করুন'}
+              <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-black text-white shrink-0" style={{ background: '#e2136e' }}>৳</div>
+              <div className="text-left">
+                <p className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: '#f472b6' }}>
+                  {showBalance ? 'ওয়ালেট ব্যালেন্স' : 'ব্যালেন্স দেখুন'}
                 </p>
                 <div className="h-5 flex items-center">
                   {showBalance ? (
-                    <div className="flex items-center space-x-2 animate-fadeIn">
-                      <span className="font-extrabold text-sm sm:text-base text-white tracking-wide">
-                        ৳ {wallet.bdtBalance.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                    <div className="flex items-center gap-2 animate-fadeIn">
+                      <span className="font-extrabold text-sm text-white">
+                        ৳{wallet.bdtBalance.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                       </span>
-                      <span className="text-[10px] sm:text-[11px] text-cyan-300 bg-cyan-950 px-1.5 py-0.5 rounded font-mono border border-cyan-800">
-                        ¥{wallet.ecnyBalance} e-CNY
-                      </span>
+                      <span className="badge badge-cyan text-[10px] py-0 px-1.5">¥{wallet.ecnyBalance}</span>
                     </div>
                   ) : (
-                    <span className="text-xs sm:text-sm font-semibold text-slate-300">
-                      ••••••• ৳
-                    </span>
+                    <span className="text-sm font-semibold tracking-wider" style={{ color: '#64748b' }}>••••••• ৳</span>
                   )}
                 </div>
+              </div>
+              <div className="w-5 h-5 flex items-center justify-center">
+                {showBalance ? <EyeOff size={14} style={{ color: '#f472b6' }} /> : <Eye size={14} style={{ color: '#64748b' }} />}
               </div>
             </button>
           </div>
 
-          {/* Right Action Bar */}
-          <div className="flex items-center space-x-2 sm:space-x-2.5">
-            
-            {/* Dialect Selector Dropdown */}
+          {/* Right Actions */}
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+
+            {/* AI Advisor Button */}
+            <button
+              onClick={onOpenCounselor}
+              className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-semibold text-white transition active:scale-95"
+              style={{ background: 'linear-gradient(135deg, #7c3aed, #4f46e5)', boxShadow: '0 4px 16px -4px rgba(124,58,237,0.5)' }}
+              title="Groq AI Financial Counselor"
+            >
+              <Sparkles size={13} className="animate-spin-slow text-yellow-300 shrink-0" />
+              <span className="hidden sm:inline">AI Advisor</span>
+              <span className="sm:hidden font-bold">AI</span>
+            </button>
+
+            {/* Dialect Selector */}
             <div className="relative">
               <button
                 onClick={() => setDialectDropdownOpen(!dialectDropdownOpen)}
-                className="flex items-center space-x-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs sm:text-sm font-medium px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl border border-slate-700 transition"
-                title="ভাষা পরিবর্তন"
+                className="btn-ghost gap-1 px-2 sm:px-2.5 py-1.5"
+                title="ভাষা নির্বাচন"
               >
-                <span>{currentDialectObj.flag}</span>
-                <span className="hidden lg:inline">{currentDialectObj.name}</span>
-                <ChevronDown size={13} className="text-slate-400" />
+                <Globe size={13} />
+                <span className="hidden lg:inline text-xs">{currentDialectObj.name}</span>
+                <ChevronDown size={11} style={{ color: '#64748b' }} />
               </button>
 
               {dialectDropdownOpen && (
-                <div className="absolute right-0 mt-2 w-52 rounded-2xl bg-slate-900 border border-slate-700 shadow-2xl p-1.5 z-50 animate-fadeIn">
-                  <div className="px-3 py-1.5 border-b border-slate-800">
-                    <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
-                      ভয়েস ডায়ালেক্ট নির্বাচন
-                    </p>
-                  </div>
+                <div className="absolute right-0 mt-2 w-52 rounded-2xl p-1.5 z-50 animate-fadeInScale"
+                  style={{ background: '#0d1426', border: '1px solid rgba(255,255,255,0.09)', boxShadow: '0 20px 60px rgba(0,0,0,0.6)' }}>
+                  <p className="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider" style={{ color: '#475569' }}>
+                    ভাষা ও আঞ্চলিক ভয়েস
+                  </p>
                   {DIALECTS.map((dialect) => (
                     <button
                       key={dialect.id}
                       onClick={() => {
                         setSelectedDialect(dialect.id);
                         setDialectDropdownOpen(false);
-                        if (soundEnabled) {
-                          voiceEngine.speakText(`ভয়েস ভাষা ${dialect.name} সেট করা হয়েছে`, dialect.voiceCode, false);
-                        }
+                        if (soundEnabled) voiceEngine.speakText(`${dialect.name} সেট হয়েছে`, dialect.voiceCode, false);
                       }}
-                      className={`w-full flex items-center justify-between px-3 py-2 text-xs rounded-xl transition ${
-                        selectedDialect === dialect.id
-                          ? 'bg-brand-500/20 text-brand-300 font-semibold'
-                          : 'text-slate-300 hover:bg-slate-800'
-                      }`}
+                      className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs transition"
+                      style={selectedDialect === dialect.id
+                        ? { background: 'rgba(226,19,110,0.15)', color: '#f472b6' }
+                        : { color: '#94a3b8' }}
                     >
-                      <div className="flex items-center space-x-2">
+                      <div className="flex items-center gap-2">
                         <span>{dialect.flag}</span>
                         <span>{dialect.name}</span>
                       </div>
-                      {selectedDialect === dialect.id && (
-                        <CheckCircle2 size={13} className="text-brand-400" />
-                      )}
+                      {selectedDialect === dialect.id && <CheckCircle2 size={13} style={{ color: '#e2136e' }} />}
                     </button>
                   ))}
                 </div>
@@ -163,42 +172,79 @@ export default function Navbar({
             {/* Sound Toggle */}
             <button
               onClick={() => setSoundEnabled(!soundEnabled)}
-              className={`p-2 rounded-xl border transition ${
-                soundEnabled 
-                  ? 'bg-brand-500/10 border-brand-500/40 text-brand-400' 
-                  : 'bg-slate-800 border-slate-700 text-slate-400'
-              }`}
+              className="btn-ghost p-1.5 sm:p-2"
               title={soundEnabled ? 'সাউন্ড চালু' : 'সাউন্ড বন্ধ'}
             >
-              {soundEnabled ? <Volume2 size={18} /> : <VolumeX size={18} />}
+              {soundEnabled ? <Volume2 size={15} style={{ color: '#e2136e' }} /> : <VolumeX size={15} />}
             </button>
 
-            {/* AI Advisor Modal Trigger */}
-            <button
-              onClick={onOpenCounselor}
-              className="flex items-center space-x-1.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-semibold px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl shadow-md transition"
-              title="এআই আর্থিক উপদেষ্টা"
-            >
-              <Sparkles size={14} className="text-yellow-300 animate-spin-slow" />
-              <span className="hidden sm:inline">AI Counselor</span>
-            </button>
-
-            {/* ML API Spec Modal Trigger */}
+            {/* ML Spec */}
             <button
               onClick={onOpenMlSpec}
-              className="flex items-center space-x-1 px-2.5 py-1.5 sm:py-2 rounded-xl bg-cyan-950/80 hover:bg-cyan-900 border border-cyan-800 text-cyan-300 text-xs font-medium transition"
-              title="ML Team API Documentation"
+              className="btn-ghost p-2 hidden md:flex"
+              title="ML API Spec"
             >
-              <Code2 size={15} />
-              <span className="hidden lg:inline">ML Spec</span>
+              <Code2 size={15} style={{ color: '#22d3ee' }} />
             </button>
-
           </div>
-
         </div>
 
-        {/* Laptop / Desktop Sub-Navbar Navigation Tabs */}
-        <div className="hidden md:flex items-center space-x-1 py-2 border-t border-slate-800/80 overflow-x-auto scrollbar-none">
+        {/* ── Mobile Balance Bar (Under navbar for 100% responsive phone experience) ── */}
+        <div className="md:hidden pb-2.5 pt-0">
+          <button
+            onClick={handleToggleBalance}
+            className="w-full flex items-center justify-between px-3 py-2 rounded-2xl transition-all duration-300 active:scale-[0.98]"
+            style={{
+              background: showBalance ? 'rgba(226,19,110,0.12)' : 'rgba(255,255,255,0.04)',
+              border: showBalance ? '1px solid rgba(226,19,110,0.32)' : '1px solid rgba(255,255,255,0.07)',
+              boxShadow: showBalance ? '0 0 20px -5px rgba(226,19,110,0.25)' : 'none'
+            }}
+          >
+            {/* Left Icon & Text */}
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-black text-white shrink-0" style={{ background: '#e2136e' }}>
+                ৳
+              </div>
+              <div className="text-left min-w-0">
+                <p className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: '#f472b6' }}>
+                  {showBalance ? 'ওয়ালেট ব্যালেন্স' : 'ব্যালেন্স জানতে ট্যাপ করুন'}
+                </p>
+                <div className="h-5 flex items-center">
+                  {showBalance ? (
+                    <div className="flex items-center gap-1.5 animate-fadeIn flex-wrap">
+                      <span className="font-extrabold text-sm text-white">
+                        ৳{wallet.bdtBalance.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                      </span>
+                      <span className="badge badge-cyan text-[10px] py-0 px-1.5">¥{wallet.ecnyBalance}</span>
+                      {wallet.greenTokens !== undefined && (
+                        <span className="badge badge-emerald text-[10px] py-0 px-1.5 hidden xs:inline-flex">
+                          🌿 {wallet.greenTokens}
+                        </span>
+                      )}
+                    </div>
+                  ) : (
+                    <span className="text-xs font-semibold" style={{ color: '#64748b' }}>
+                      ••••••• ৳ (ট্যাপ করুন)
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Right Toggle Indicator */}
+            <div className="flex items-center gap-1.5 pl-2 shrink-0">
+              <span className="text-[11px] font-medium" style={{ color: showBalance ? '#f472b6' : '#94a3b8' }}>
+                {showBalance ? 'লুকান' : 'দেখুন'}
+              </span>
+              <div className="w-6 h-6 rounded-lg flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.06)' }}>
+                {showBalance ? <EyeOff size={13} style={{ color: '#f472b6' }} /> : <Eye size={13} style={{ color: '#94a3b8' }} />}
+              </div>
+            </div>
+          </button>
+        </div>
+
+        {/* ── Desktop Nav Tabs ──────────────────────────────── */}
+        <div className="hidden md:flex items-center gap-1 py-2" style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}>
           {navLinks.map((link) => {
             const Icon = link.icon;
             const isActive = activeTab === link.id;
@@ -206,13 +252,12 @@ export default function Navbar({
               <button
                 key={link.id}
                 onClick={() => setActiveTab(link.id)}
-                className={`flex items-center space-x-2 px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-semibold transition ${
-                  isActive
-                    ? 'bg-brand-500 text-white shadow-sm'
-                    : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
-                }`}
+                className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all"
+                style={isActive
+                  ? { background: 'rgba(226,19,110,0.15)', color: '#f472b6', border: '1px solid rgba(226,19,110,0.25)' }
+                  : { color: '#64748b', background: 'transparent', border: '1px solid transparent' }}
               >
-                <Icon size={16} />
+                <Icon size={14} />
                 <span>{link.label}</span>
               </button>
             );

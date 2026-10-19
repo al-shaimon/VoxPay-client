@@ -1,71 +1,75 @@
 import React from 'react';
-import { 
-  Send, Smartphone, Landmark, ArrowDownLeft, Coins, 
-  CloudRain, ShieldAlert, HeartHandshake, Mic, Sparkles, 
-  ArrowRight, ShieldCheck, CheckCircle2, TrendingUp, Satellite 
+import {
+  Send, Smartphone, Landmark, ArrowDownLeft, Coins,
+  CloudRain, ShieldAlert, HeartHandshake, Mic, Sparkles,
+  ArrowRight, ShieldCheck, TrendingUp, Satellite, Zap
 } from 'lucide-react';
 import { SAMPLE_VOICE_COMMANDS } from '../constants/data';
 
-export default function HomeScreen({ 
-  wallet, 
-  transactions, 
-  onActionClick, 
-  onTriggerVoice, 
-  onSwitchTab 
-}) {
+export default function HomeScreen({ wallet, transactions, onActionClick, onTriggerVoice, onSwitchTab }) {
+
   const coreServices = [
-    { id: 'send_money', name: 'টাকা পাঠানো', enName: 'Send Money', icon: Send, color: 'bg-rose-500 text-white' },
-    { id: 'recharge', name: 'মোবাইল রিচার্জ', enName: 'Recharge', icon: Smartphone, color: 'bg-blue-500 text-white' },
-    { id: 'ai_loan', name: 'এআই ঋণ', enName: 'AI Micro-Loan', icon: Landmark, color: 'bg-emerald-600 text-white' },
-    { id: 'cash_out', name: 'ক্যাশ আউট', enName: 'Cash Out', icon: ArrowDownLeft, color: 'bg-amber-500 text-white' },
-    { id: 'cross_border_ecny', name: 'e-CNY রেমিট্যান্স', enName: 'CBDC Gateway', icon: Coins, color: 'bg-orange-500 text-white' },
-    { id: 'weather_protection', name: 'ওয়েদার শিল্ড', enName: 'Weather Freeze', icon: CloudRain, color: 'bg-sky-500 text-white' },
-    { id: 'zkp_verify', name: 'ZKP প্রাইভেসি', enName: 'ZKP Privacy', icon: ShieldAlert, color: 'bg-purple-600 text-white' },
-    { id: 'emergency_relief', name: 'জরুরি ত্রাণ', enName: 'Disaster Aid', icon: HeartHandshake, color: 'bg-red-600 text-white' },
+    { id: 'send_money',       name: 'টাকা পাঠান',    enName: 'Send',         icon: Send,          color: '#e2136e', bg: 'rgba(226,19,110,0.15)' },
+    { id: 'recharge',         name: 'রিচার্জ',        enName: 'Recharge',     icon: Smartphone,    color: '#3b82f6', bg: 'rgba(59,130,246,0.15)' },
+    { id: 'ai_loan',          name: 'AI লোন',         enName: 'Micro-Loan',   icon: Landmark,      color: '#10b981', bg: 'rgba(16,185,129,0.15)' },
+    { id: 'cash_out',         name: 'ক্যাশ আউট',     enName: 'Cash Out',     icon: ArrowDownLeft, color: '#f59e0b', bg: 'rgba(245,158,11,0.15)' },
+    { id: 'cross_border_ecny',name: 'e-CNY',          enName: 'CBDC',         icon: Coins,         color: '#f97316', bg: 'rgba(249,115,22,0.15)' },
+    { id: 'weather_protection',name:'ওয়েদার শিল্ড',  enName: 'Weather',      icon: CloudRain,     color: '#06b6d4', bg: 'rgba(6,182,212,0.15)' },
+    { id: 'zkp_verify',       name: 'ZKP প্রাইভেসি', enName: 'Privacy',      icon: ShieldAlert,   color: '#8b5cf6', bg: 'rgba(139,92,246,0.15)' },
+    { id: 'emergency_relief', name: 'জরুরি ত্রাণ',   enName: 'Aid',          icon: HeartHandshake,color: '#ef4444', bg: 'rgba(239,68,68,0.15)' },
   ];
 
-  const recentTransactions = transactions.slice(0, 4);
+  const recentTxs = transactions.slice(0, 4);
 
   return (
-    <div className="space-y-6 animate-fadeIn">
-      
-      {/* Top Banner: Voice Assistant Action Bar & Dialect Prompts */}
-      <div className="rounded-3xl bg-gradient-to-r from-brand-950/70 via-slate-900 to-slate-900 border border-brand-500/30 p-4 sm:p-6 shadow-xl relative overflow-hidden">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="flex-1 space-y-1">
-            <div className="flex items-center space-x-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
-              <span className="text-xs font-bold text-brand-300 uppercase tracking-wider">
-                ভয়েস ইঞ্জিন অ্যাক্টিভ (Regional Dialect Engine)
+    <div className="space-y-5 animate-fadeIn">
+
+      {/* ── Hero Voice Banner ─────────────────────────────── */}
+      <div className="relative rounded-3xl overflow-hidden p-5 sm:p-7"
+        style={{ background: 'linear-gradient(135deg, rgba(226,19,110,0.12) 0%, rgba(10,16,30,0.95) 60%, rgba(9,13,28,0.98) 100%)', border: '1px solid rgba(226,19,110,0.2)' }}>
+        
+        {/* Ambient glow */}
+        <div className="absolute -top-10 -left-10 w-48 h-48 rounded-full pointer-events-none"
+          style={{ background: '#e2136e', filter: 'blur(80px)', opacity: 0.08 }} />
+
+        <div className="relative flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-blink" />
+              <span className="text-xs font-bold uppercase tracking-widest" style={{ color: '#f472b6' }}>
+                Regional Voice Engine · Active
               </span>
             </div>
-            <h2 className="text-lg sm:text-2xl font-black text-white">
-              শুধু কণ্ঠে বলুন — তাৎক্ষণিক পেমেন্ট, লোন ও বিল পরিশোধ
-            </h2>
-            <p className="text-xs sm:text-sm text-slate-400">
-              প্রমিত বাংলা, চাঁটগাঁইয়া, ছিলটী বা Banglish-এ কথা বলে কোনো পিন নম্বর ছাড়া নিরাপদ লেনদেন করুন।
+            <h1 className="text-xl sm:text-3xl font-black text-white leading-tight">
+              শুধু কণ্ঠে বলুন —<br className="hidden sm:block" />
+              <span style={{ color: '#f472b6' }}>তাৎক্ষণিক পেমেন্ট</span>
+            </h1>
+            <p className="text-sm text-slate-400 max-w-sm">
+              প্রমিত বাংলা, চাঁটগাঁইয়া বা Banglish-এ কথা বলুন। কোনো PIN দরকার নেই।
             </p>
           </div>
 
           <button
             onClick={() => onTriggerVoice('রহিমকে ৫০০ টাকা পাঠাও')}
-            className="flex items-center justify-center space-x-2 px-5 py-3 rounded-2xl bg-gradient-to-tr from-brand-600 to-pink-500 text-white font-bold text-xs sm:text-sm shadow-lg shadow-brand-500/30 hover:scale-105 active:scale-95 transition-all flex-shrink-0 self-start sm:self-auto"
+            className="flex items-center gap-2.5 px-5 py-3.5 rounded-2xl font-bold text-sm text-white flex-shrink-0 self-start sm:self-center transition-all active:scale-95"
+            style={{ background: 'linear-gradient(135deg, #e2136e, #9333ea)', boxShadow: '0 8px 30px -6px rgba(226,19,110,0.6)' }}
           >
-            <Mic size={20} className="animate-pulse" />
-            <span>মুখে কথা বলুন</span>
+            <div className="flex items-end gap-0.5 h-5">
+              {[...Array(5)].map((_, i) => <div key={i} className="voice-bar" style={{ animationDelay: `${i * 0.1}s` }} />)}
+            </div>
+            <span>মুখে বলুন</span>
           </button>
         </div>
 
         {/* Quick Voice Chips */}
-        <div className="mt-4 pt-3 border-t border-slate-800/80 flex items-center gap-2 overflow-x-auto scrollbar-none">
-          <span className="text-xs text-slate-400 font-semibold flex-shrink-0 hidden sm:inline">
-            ক্লিক করে টেস্ট করুন:
-          </span>
+        <div className="mt-4 pt-4 flex items-center gap-2 overflow-x-auto scrollbar-none" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+          <span className="text-[11px] text-slate-500 font-semibold flex-shrink-0 hidden sm:block">চেষ্টা করুন:</span>
           {SAMPLE_VOICE_COMMANDS.map((cmd, i) => (
             <button
               key={i}
               onClick={() => onTriggerVoice(cmd.text, cmd.dialect)}
-              className="flex-shrink-0 px-3 py-1.5 rounded-xl bg-slate-800/80 hover:bg-brand-500/20 border border-slate-700/60 text-xs text-slate-300 hover:text-white transition"
+              className="flex-shrink-0 px-3 py-1.5 rounded-xl text-xs text-slate-300 transition-all"
+              style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}
             >
               "{cmd.text}"
             </button>
@@ -73,157 +77,165 @@ export default function HomeScreen({
         </div>
       </div>
 
-      {/* 8 Core MFS Services Grid */}
-      <div className="rounded-3xl bg-slate-900 border border-slate-800 p-4 sm:p-6 shadow-xl">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-sm sm:text-base font-bold text-white">
-            মূল সেবাসমূহ (Core MFS Services)
-          </h3>
-          <span className="text-xs text-slate-400">
-            ভয়েস বা ১-ট্যাপে ব্যবহার করুন
-          </span>
-        </div>
+      {/* ── Balance Summary Cards ─────────────────────────── */}
+      <div className="grid grid-cols-3 gap-3">
+        {[
+          { label: 'BDT ব্যালেন্স', value: `৳${wallet.bdtBalance.toLocaleString('en-IN')}`, color: '#f472b6', icon: '৳' },
+          { label: 'e-CNY ব্যালেন্স', value: `¥${wallet.ecnyBalance}`, color: '#22d3ee', icon: '¥' },
+          { label: 'Green টোকেন', value: `${wallet.greenTokens ?? 0} GT`, color: '#34d399', icon: '🌿' },
+        ].map((item, i) => (
+          <div key={i} className="card p-4 text-center">
+            <p className="text-[11px] text-slate-500 font-medium mb-1">{item.label}</p>
+            <p className="text-base font-black" style={{ color: item.color }}>{item.value}</p>
+          </div>
+        ))}
+      </div>
 
-        <div className="grid grid-cols-4 sm:grid-cols-4 lg:grid-cols-8 gap-3 sm:gap-4">
-          {coreServices.map((service) => {
-            const Icon = service.icon;
+      {/* ── Core Services Grid ────────────────────────────── */}
+      <div className="card">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-sm font-bold text-white">মূল সেবাসমূহ</h2>
+          <span className="text-[11px] text-slate-500">১-ট্যাপে ব্যবহার করুন</span>
+        </div>
+        <div className="grid grid-cols-4 sm:grid-cols-8 gap-2">
+          {coreServices.map((svc) => {
+            const Icon = svc.icon;
             return (
               <button
-                key={service.id}
-                onClick={() => onActionClick(service.id)}
-                className="group flex flex-col items-center justify-center p-3 rounded-2xl hover:bg-slate-800/60 border border-transparent hover:border-slate-700/60 transition-all text-center"
+                key={svc.id}
+                onClick={() => onActionClick(svc.id)}
+                className="group flex flex-col items-center gap-2 p-2.5 rounded-2xl transition-all active:scale-95"
+                style={{ background: 'rgba(255,255,255,0)', border: '1px solid transparent' }}
+                onMouseEnter={e => { e.currentTarget.style.background = svc.bg; e.currentTarget.style.borderColor = `${svc.color}30`; }}
+                onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0)'; e.currentTarget.style.borderColor = 'transparent'; }}
               >
-                <div className={`w-12 h-12 sm:w-14 sm:h-14 rounded-2xl ${service.color} flex items-center justify-center shadow-md group-hover:scale-110 group-active:scale-95 transition-transform`}>
-                  <Icon size={24} />
+                <div className="w-12 h-12 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110 group-active:scale-95"
+                  style={{ background: svc.bg, color: svc.color }}>
+                  <Icon size={22} />
                 </div>
-                <span className="text-xs font-semibold text-slate-100 group-hover:text-brand-300 mt-2 line-clamp-1">
-                  {service.name}
-                </span>
-                <span className="text-[10px] text-slate-400 font-medium hidden sm:block">
-                  {service.enName}
-                </span>
+                <span className="text-[11px] font-semibold text-slate-300 text-center leading-tight">{svc.name}</span>
               </button>
             );
           })}
         </div>
       </div>
 
-      {/* Responsive Multi-Column Dashboard Row (Laptop: 2 Columns / Mobile: Stacked) */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        
-        {/* Left Column (7 Cols on Laptop): AI Credit Score & Loan Highlights */}
-        <div className="lg:col-span-7 space-y-4">
-          <div className="rounded-3xl bg-slate-900 border border-slate-800 p-5 sm:p-6 shadow-xl space-y-4">
-            
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <span className="p-1.5 rounded-xl bg-emerald-500/20 text-emerald-400">
-                  <ShieldCheck size={18} />
-                </span>
-                <h3 className="text-sm sm:text-base font-bold text-white">
-                  এআই ক্রেডিট স্কোর ও লোন স্ট্যাটাস
-                </h3>
+      {/* ── Bottom Row: Credit Score + Weather + Transactions ─ */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+
+        {/* Credit Score Highlight */}
+        <div className="lg:col-span-5 card">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-xl flex items-center justify-center" style={{ background: 'rgba(16,185,129,0.15)' }}>
+                <ShieldCheck size={15} style={{ color: '#10b981' }} />
               </div>
-              <span className="px-2.5 py-0.5 rounded-full bg-emerald-950 text-emerald-400 border border-emerald-800 text-xs font-bold">
-                ✓ বিশ্বস্ত (Trusted)
-              </span>
+              <span className="text-sm font-bold text-white">AI ক্রেডিট স্কোর</span>
             </div>
-
-            <div className="flex flex-col sm:flex-row items-center justify-between p-4 rounded-2xl bg-gradient-to-r from-emerald-950/40 via-slate-950 to-slate-950 border border-emerald-500/30 gap-4">
-              <div className="text-center sm:text-left">
-                <span className="text-xs text-slate-400 block">বিকল্প এআই ক্রেডিট স্কোর:</span>
-                <div className="flex items-baseline space-x-1.5 justify-center sm:justify-start mt-0.5">
-                  <span className="text-3xl sm:text-4xl font-black text-emerald-400 tracking-tight">
-                    {wallet.trustScore}
-                  </span>
-                  <span className="text-xs text-slate-400 font-mono">/ ৯০০ (Platinum)</span>
-                </div>
-                <p className="text-xs text-slate-300 mt-1">
-                  অনুমোদিত তাৎক্ষণিক লোন সিলিং: <strong className="text-brand-400">৳২৫,০০০</strong>
-                </p>
-              </div>
-
-              <button
-                onClick={() => onSwitchTab('loan')}
-                className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center justify-center space-x-1.5 shadow-md flex-shrink-0"
-              >
-                <span>লোন আবেদন করুন</span>
-                <ArrowRight size={14} />
-              </button>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3 text-xs">
-              <div className="p-3 rounded-2xl bg-slate-950/60 border border-slate-800">
-                <span className="text-slate-400 text-[11px] block">মোবাইল রিচার্জ স্কোর:</span>
-                <span className="text-sm font-bold text-white mt-0.5 block">৯২/১০০ (Very High)</span>
-              </div>
-              <div className="p-3 rounded-2xl bg-slate-950/60 border border-slate-800">
-                <span className="text-slate-400 text-[11px] block">ইউটিলিটি বিল অন-টাইম:</span>
-                <span className="text-sm font-bold text-white mt-0.5 block">৮৮/১০০ (১২ মাস ক্লিয়ার)</span>
-              </div>
-            </div>
-
+            <span className="badge badge-green">✓ বিশ্বস্ত</span>
           </div>
+
+          <div className="rounded-2xl p-4 mb-3" style={{ background: 'rgba(16,185,129,0.06)', border: '1px solid rgba(16,185,129,0.2)' }}>
+            <div className="flex items-end justify-between">
+              <div>
+                <span className="text-4xl font-black" style={{ color: '#10b981' }}>{wallet.trustScore ?? 785}</span>
+                <span className="text-slate-500 text-sm ml-1">/ ৯০০</span>
+              </div>
+              <div className="text-right">
+                <p className="text-[11px] text-slate-400">অনুমোদিত সীমা</p>
+                <p className="text-base font-bold" style={{ color: '#f472b6' }}>৳২৫,০০০</p>
+              </div>
+            </div>
+            <div className="mt-2 progress-bar">
+              <div className="progress-fill" style={{ width: `${((wallet.trustScore ?? 785) / 900) * 100}%` }} />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2 text-xs mb-3">
+            <div className="p-2.5 rounded-xl" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+              <p className="text-slate-500 text-[10px]">রিচার্জ স্কোর</p>
+              <p className="font-bold text-white mt-0.5">৯২ / ১০০</p>
+            </div>
+            <div className="p-2.5 rounded-xl" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+              <p className="text-slate-500 text-[10px]">বিল পরিশোধ</p>
+              <p className="font-bold text-white mt-0.5">৮৮ / ১০০</p>
+            </div>
+          </div>
+
+          <button
+            onClick={() => onSwitchTab('loan')}
+            className="w-full btn-primary py-2.5"
+          >
+            <Landmark size={14} />
+            লোন আবেদন করুন
+            <ArrowRight size={14} />
+          </button>
         </div>
 
-        {/* Right Column (5 Cols on Laptop): Weather Protection & Recent Transactions */}
-        <div className="lg:col-span-5 space-y-4">
-          
-          {/* Weather Status Card */}
-          <div className="rounded-3xl bg-slate-900 border border-slate-800 p-5 shadow-xl space-y-3">
+        {/* Right: Weather + Transactions */}
+        <div className="lg:col-span-7 space-y-4">
+
+          {/* Weather Shield Mini */}
+          <div className="card" style={{ border: '1px solid rgba(6,182,212,0.2)' }}>
             <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <Satellite size={16} className="text-sky-400" />
-                <h4 className="text-xs sm:text-sm font-bold text-white">
-                  স্যাটেলাইট ওয়েদার রাডার শিল্ড
-                </h4>
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-xl flex items-center justify-center" style={{ background: 'rgba(6,182,212,0.15)' }}>
+                  <Satellite size={15} style={{ color: '#06b6d4' }} />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-white">স্যাটেলাইট ওয়েদার শিল্ড</h3>
+                  <p className="text-[11px] text-slate-400">দুর্যোগে কিস্তি স্বয়ংক্রিয় ফ্রিজ</p>
+                </div>
               </div>
-              <span className="text-[10px] text-sky-400 font-mono">LIVE FEED</span>
+              <div className="flex items-center gap-2">
+                <span className="badge badge-cyan">LIVE</span>
+                <button onClick={() => onSwitchTab('weather')} className="btn-ghost px-2.5 py-1.5 text-xs">
+                  দেখুন <ArrowRight size={11} />
+                </button>
+              </div>
             </div>
-
-            <p className="text-xs text-slate-300 leading-snug">
-              উপকূল ও হাওর অঞ্চলে প্রাকৃতিক দুর্যোগ সংকেত জারি হলে কিস্তি স্বয়ংক্রিয়ভাবে ফ্রিজ থাকবে।
-            </p>
-
-            <button
-              onClick={() => onSwitchTab('weather')}
-              className="text-xs text-sky-400 hover:text-sky-300 font-bold flex items-center space-x-1"
-            >
-              <span>ওয়েদার স্ট্যাটাস দেখুন</span>
-              <ArrowRight size={13} />
-            </button>
           </div>
 
-          {/* Mini Recent Transactions */}
-          <div className="rounded-3xl bg-slate-900 border border-slate-800 p-5 shadow-xl space-y-3">
-            <div className="flex items-center justify-between">
-              <h4 className="text-xs sm:text-sm font-bold text-white">
-                সাম্প্রতিক লেনদেন
-              </h4>
+          {/* Recent Transactions */}
+          <div className="card">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-bold text-white">সাম্প্রতিক লেনদেন</h3>
               <button
                 onClick={() => onSwitchTab('history')}
-                className="text-xs font-semibold text-brand-400 hover:text-brand-300"
+                className="text-xs font-semibold" style={{ color: '#f472b6' }}
               >
-                সব স্টেটমেন্ট →
+                সব দেখুন →
               </button>
             </div>
-
             <div className="space-y-2">
-              {recentTransactions.map((tx) => {
-                const isNegative = tx.amount < 0;
+              {recentTxs.length === 0 ? (
+                <p className="text-center text-xs text-slate-500 py-4">কোনো লেনদেন নেই</p>
+              ) : recentTxs.map((tx) => {
+                const isNeg = tx.amount < 0;
+                const txIcons = {
+                  send_money: '↗',
+                  loan_disbursement: '⚡',
+                  utility: '💡',
+                  ecny_remit: '🌐',
+                  crop_insurance: '🌾',
+                  emergency_aid: '🆘',
+                };
                 return (
-                  <div
-                    key={tx.id}
-                    className="flex items-center justify-between p-2.5 rounded-xl bg-slate-950/60 border border-slate-800/80 text-xs"
-                  >
-                    <div>
-                      <p className="font-semibold text-white">{tx.title}</p>
-                      <p className="text-[10px] text-slate-400">{tx.timestamp}</p>
+                  <div key={tx.id} className="flex items-center justify-between px-3 py-2.5 rounded-xl transition"
+                    style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)' }}>
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-xl flex items-center justify-center text-base"
+                        style={{ background: 'rgba(255,255,255,0.05)' }}>
+                        {txIcons[tx.type] || '•'}
+                      </div>
+                      <div>
+                        <p className="text-xs font-semibold text-white line-clamp-1">{tx.title}</p>
+                        <p className="text-[10px]" style={{ color: '#475569' }}>{tx.timestamp}</p>
+                      </div>
                     </div>
-                    <span className={`font-bold font-mono text-xs sm:text-sm ${
-                      isNegative ? 'text-rose-400' : 'text-emerald-400'
-                    }`}>
-                      {isNegative ? '-' : '+'} {Math.abs(tx.amount).toLocaleString('en-IN')} {tx.currency}
+                    <span className="font-bold font-mono text-xs flex-shrink-0"
+                      style={{ color: isNeg ? '#f87171' : '#34d399' }}>
+                      {isNeg ? '-' : '+'}{Math.abs(tx.amount).toLocaleString('en-IN')} {tx.currency}
                     </span>
                   </div>
                 );
@@ -232,7 +244,6 @@ export default function HomeScreen({
           </div>
 
         </div>
-
       </div>
 
     </div>

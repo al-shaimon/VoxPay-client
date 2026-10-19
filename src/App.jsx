@@ -414,9 +414,13 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col">
+    <div className="min-h-screen bg-grid text-slate-100 flex flex-col overflow-x-hidden relative" style={{ background: '#070b14' }}>
       
-      {/* Top Navbar with Desktop Tabs & Mobile Actions */}
+      {/* Ambient background glow orbs */}
+      <div className="ambient-glow w-96 h-96 pointer-events-none" style={{ top: '-80px', left: '-80px', background: '#e2136e' }} />
+      <div className="ambient-glow w-96 h-96 pointer-events-none" style={{ top: '40%', right: '-100px', background: '#7c3aed' }} />
+      <div className="ambient-glow w-72 h-72 pointer-events-none" style={{ bottom: '10%', left: '30%', background: '#0ea5e9' }} />
+
       <Navbar
         wallet={wallet}
         selectedDialect={selectedDialect}
@@ -430,7 +434,7 @@ export default function App() {
       />
 
       {/* Main Full-Width Responsive Container */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-24 md:pb-12">
+      <main className="flex-1 relative z-10 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-24 md:pb-12">
         {activeTab === 'overview' && (
           <HomeScreen
             wallet={wallet}
@@ -481,18 +485,17 @@ export default function App() {
       />
 
       {/* Footer (Laptop View) */}
-      <footer className="hidden md:block border-t border-slate-900 bg-slate-950/80 py-6 text-center text-xs text-slate-500">
-        <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <div className="flex items-center space-x-2">
-            <span className="w-2 h-2 rounded-full bg-brand-500"></span>
-            <span className="font-bold text-slate-300">VoxPay AI</span>
-            <span>• Next-Gen Voice-First MFS Platform</span>
+      <footer className="hidden md:block relative z-10 py-5 text-center text-xs" style={{ borderTop: '1px solid rgba(255,255,255,0.05)', color: '#334155', background: 'rgba(7,11,20,0.8)' }}>
+        <div className="max-w-7xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-blink" />
+            <span className="font-bold" style={{ color: '#475569' }}>VoxPay AI</span>
+            <span style={{ color: '#1e293b' }}>·</span>
+            <span>Voice-First MFS · Bangladesh</span>
           </div>
-          <p>
-            Designed for Shenzhen International FinTech Competition (FinTechathon) 2026
-          </p>
-          <div className="text-[11px] text-slate-400 font-mono">
-            PQC Lattice • ZKP Groth16 • Web Speech AI
+          <span style={{ color: '#1e293b' }}>Shenzhen International FinTechathon 2026</span>
+          <div className="font-mono" style={{ color: '#1e293b' }}>
+            PQC · ZKP Groth16 · Groq AI · Web Speech
           </div>
         </div>
       </footer>
@@ -527,6 +530,7 @@ export default function App() {
         onClose={() => setCounselorModalOpen(false)}
         selectedDialect={selectedDialect}
         soundEnabled={soundEnabled}
+        wallet={wallet}
       />
 
       <SoundboxDemoModal
