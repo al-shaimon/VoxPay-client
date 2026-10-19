@@ -1,17 +1,30 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   X, Speaker, Radio, Volume2, CheckCircle2, 
   Smartphone, Wifi, ArrowDownLeft 
 } from 'lucide-react';
 import { voiceEngine } from '../services/voiceEngine';
+import { useLanguage } from '../i18n/LanguageContext';
 
 export default function SoundboxDemoModal({ 
   isOpen, 
   onClose, 
   soundEnabled 
 }) {
+  const { lang, t } = useLanguage();
   const [lastPayment, setLastPayment] = useState({ amount: 500, time: 'Just now' });
   const [isPlaying, setIsPlaying] = useState(false);
+
+  useEffect(() => {
+    return () => {
+      voiceEngine.stopSpeaking();
+    };
+  }, []);
+
+  const handleClose = () => {
+    voiceEngine.stopSpeaking();
+    onClose();
+  };
 
   if (!isOpen) return null;
 
@@ -22,9 +35,12 @@ export default function SoundboxDemoModal({
     // Play crisp soundbox double chime
     voiceEngine.playSoundboxChime();
 
-    // Bangla TTS Announcement
+    // Language-aware TTS Announcement
     setTimeout(() => {
-      voiceEngine.speakText(`VoxPay এ ${amount} টাকা সফলভাবে প্রাপ্ত হয়েছে।`, 'bn-BD', false);
+      const speech = lang === 'en'
+        ? `Payment of ${Number(amount).toLocaleString('en-US')} Taka received on VoxPay Smart Soundbox. Your balance has been updated.`
+        : `VoxPay মার্চেন্ট সাউন্ডবক্সে ${Number(amount).toLocaleString('en-IN')} টাকা সফলভাবে প্রাপ্ত হয়েছে। আপনার বর্তমান ব্যালেন্স আপডেট হয়েছে।`;
+      voiceEngine.speakText(speech, lang === 'en' ? 'en-US' : 'bn-BD', false);
       setIsPlaying(false);
     }, 600);
   };
@@ -38,7 +54,7 @@ export default function SoundboxDemoModal({
         
         {/* Close Button */}
         <button
-          onClick={onClose}
+          onClick={handleClose}
           className="absolute top-4 right-4 p-2 text-slate-400 hover:text-white rounded-full bg-slate-800/60 hover:bg-slate-800 transition"
         >
           <X size={18} />
@@ -54,7 +70,7 @@ export default function SoundboxDemoModal({
               VoxPay Smart Audio Soundbox
             </h3>
             <p className="text-xs text-slate-400">
-              দোকানি ও মার্চেন্টদের জন্য তাৎক্ষণিক বাংলা অডিও স্বীকৃতি
+              {lang === 'en' ? 'Instant voice broadcast confirmation for merchants' : 'দোকানি ও মার্চেন্টদের জন্য তাৎক্ষণিক বাংলা অডিও স্বীকৃতি'}
             </p>
           </div>
         </div>
@@ -102,7 +118,7 @@ export default function SoundboxDemoModal({
         {/* Test Chime Buttons */}
         <div className="space-y-2">
           <span className="text-xs font-semibold text-slate-300 block mb-1">
-            অডিও ঘোষণা পরীক্ষা করুন (Test Soundbox Broadcast):
+            {lang === 'en' ? 'Test Soundbox Broadcast:' : 'অডিও ঘোষণা পরীক্ষা করুন (Test Soundbox Broadcast):'}
           </span>
           <div className="grid grid-cols-3 gap-2">
             {[100, 500, 1250].map((amt) => (
@@ -111,7 +127,7 @@ export default function SoundboxDemoModal({
                 onClick={() => triggerTestSoundbox(amt)}
                 className="py-2.5 px-2 rounded-xl bg-slate-800 hover:bg-brand-600/30 border border-slate-700 hover:border-brand-500/50 text-white font-bold text-xs transition"
               >
-                ৳ {amt} অডিও
+                {lang === 'en' ? `৳ ${amt} Audio` : `৳ ${amt} অডিও`}
               </button>
             ))}
           </div>
@@ -120,10 +136,10 @@ export default function SoundboxDemoModal({
         {/* Close */}
         <div className="mt-5 pt-4 border-t border-slate-800">
           <button
-            onClick={onClose}
+            onClick={handleClose}
             className="w-full py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold transition"
           >
-            বন্ধ করুন
+            {lang === 'en' ? 'Close' : 'বন্ধ করুন'}
           </button>
         </div>
 

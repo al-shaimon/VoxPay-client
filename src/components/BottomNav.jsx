@@ -1,13 +1,16 @@
 import React from 'react';
 import { Home, Landmark, Mic, CloudRain, Clock } from 'lucide-react';
+import { useLanguage } from '../i18n/LanguageContext';
 
 export default function BottomNav({ activeTab, setActiveTab, onVoiceClick }) {
+  const { t } = useLanguage();
+
   const tabs = [
-    { id: 'overview', label: 'হোম',       icon: Home },
-    { id: 'loan',     label: 'লোন',       icon: Landmark },
-    { id: 'voice',    label: 'ভয়েস',      icon: Mic,      isCenter: true },
-    { id: 'weather',  label: 'ওয়েদার',    icon: CloudRain },
-    { id: 'history',  label: 'ইতিহাস',    icon: Clock },
+    { id: 'overview', label: t('nav.home', 'হোম'),       icon: Home },
+    { id: 'loan',     label: t('nav.loan', 'AI লোন'),    icon: Landmark },
+    { id: 'voice',    label: t('nav.voice', 'ভয়েস'),     icon: Mic,      isCenter: true },
+    { id: 'weather',  label: t('nav.weather', 'ওয়েদার'), icon: CloudRain },
+    { id: 'history',  label: t('nav.history', 'স্টেটমেন্ট'), icon: Clock },
   ];
 
   return (

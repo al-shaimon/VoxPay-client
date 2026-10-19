@@ -2,8 +2,10 @@ import React, { useState } from 'react';
 import { 
   ArrowUpRight, ArrowDownLeft, Search, Copy, Check, Filter 
 } from 'lucide-react';
+import { useLanguage } from '../i18n/LanguageContext';
 
 export default function TransactionHistory({ transactions }) {
+  const { lang, t } = useLanguage();
   const [activeFilter, setActiveFilter] = useState('ALL');
   const [searchQuery, setSearchQuery] = useState('');
   const [copiedId, setCopiedId] = useState(null);
@@ -37,10 +39,10 @@ export default function TransactionHistory({ transactions }) {
       <div className="rounded-3xl bg-slate-900 border border-slate-800 p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xl">
         <div>
           <h3 className="text-base sm:text-lg font-bold text-white">
-            লেনদেন হিস্ট্রি ও অন-চেইন অডিট ট্রেল
+            {lang === 'en' ? 'Transaction History & On-Chain Audit Trail' : 'লেনদেন হিস্ট্রি ও অন-চেইন অডিট ট্রেল'}
           </h3>
           <p className="text-xs text-slate-400 mt-0.5">
-            ক্রিপ্টোগ্রাফিক zk-SNARK হ্যাশ ও ভয়েস বায়োমেট্রিক দ্বারা সংরক্ষিত
+            {lang === 'en' ? 'Secured by cryptographic zk-SNARK hashes & voice biometrics' : 'ক্রিপ্টোগ্রাফিক zk-SNARK হ্যাশ ও ভয়েস বায়োমেট্রিক দ্বারা সংরক্ষিত'}
           </p>
         </div>
 
@@ -51,7 +53,7 @@ export default function TransactionHistory({ transactions }) {
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="লেনদেন বা নম্বর খুঁজুন..."
+            placeholder={lang === 'en' ? 'Search transaction or number...' : 'লেনদেন বা নম্বর খুঁজুন...'}
             className="w-full sm:w-64 bg-slate-950 border border-slate-800 rounded-xl pl-8 pr-3 py-2 text-xs text-white focus:outline-none focus:border-brand-500"
           />
         </div>
@@ -60,10 +62,10 @@ export default function TransactionHistory({ transactions }) {
       {/* Filter Tabs */}
       <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none text-xs">
         {[
-          { id: 'ALL', label: 'সব লেনদেন (All)' },
-          { id: 'SENT', label: 'প্রেরিত (Sent)' },
-          { id: 'RECEIVED', label: 'প্রাপ্ত (Received)' },
-          { id: 'REMITTANCE', label: 'e-CNY রেমিট্যান্স' }
+          { id: 'ALL', label: lang === 'en' ? 'All' : 'সব লেনদেন (All)' },
+          { id: 'SENT', label: lang === 'en' ? 'Sent' : 'প্রেরিত (Sent)' },
+          { id: 'RECEIVED', label: lang === 'en' ? 'Received' : 'প্রাপ্ত (Received)' },
+          { id: 'REMITTANCE', label: lang === 'en' ? 'e-CNY Remittance' : 'e-CNY রেমিট্যান্স' }
         ].map(tab => (
           <button
             key={tab.id}
@@ -117,7 +119,7 @@ export default function TransactionHistory({ transactions }) {
                 <button
                   onClick={() => handleCopy(tx.id, tx.zkpHash)}
                   className="text-[10px] sm:text-xs text-slate-500 hover:text-slate-300 font-mono inline-flex items-center space-x-1 mt-0.5"
-                  title="zkP Hash কপি করুন"
+                  title="Copy zkP Hash"
                 >
                   <span>zk: {tx.zkpHash}</span>
                   {copiedId === tx.id ? <Check size={11} className="text-emerald-400" /> : <Copy size={11} />}
@@ -129,7 +131,7 @@ export default function TransactionHistory({ transactions }) {
 
         {filteredList.length === 0 && (
           <div className="text-center py-12 text-slate-500 text-xs">
-            কোনো লেনদেন পাওয়া যায়নি
+            {lang === 'en' ? 'No transactions found' : 'কোনো লেনদেন পাওয়া যায়নি'}
           </div>
         )}
       </div>

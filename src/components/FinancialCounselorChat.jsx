@@ -2,18 +2,13 @@ import React, { useState, useRef, useEffect } from 'react';
 import { X, Send, Sparkles, Mic, Bot, User, Volume2, Zap } from 'lucide-react';
 import { aiCounselor, COUNSELOR_PRESETS } from '../services/aiCounselorService';
 import { voiceEngine } from '../services/voiceEngine';
+import { useLanguage } from '../i18n/LanguageContext';
 
 const GROQ_KEY_SET = import.meta.env.VITE_GROQ_API_KEY && import.meta.env.VITE_GROQ_API_KEY !== 'your_groq_api_key_here';
 
 export default function FinancialCounselorChat({ isOpen, onClose, selectedDialect, soundEnabled, wallet }) {
-  const [messages, setMessages] = useState([
-    {
-      id: 1,
-      sender: 'ai',
-      text: 'আসসালামু আলাইকুম! আমি VoxAI — আপনার আর্থিক উপদেষ্টা। সঞ্চয়, লোন, বা দুর্যোগ সুরক্ষা সংক্রান্ত যেকোনো প্রশ্ন করুন।',
-      timestamp: 'এইমাত্র',
-    },
-  ]);
+  const { lang, t } = useLanguage();
+  const [messages, setMessages] = useState([]);
   const [inputText, setInputText] = useState('');
   const [isThinking, setIsThinking] = useState(false);
   const [isListening, setIsListening] = useState(false);
@@ -21,15 +16,38 @@ export default function FinancialCounselorChat({ isOpen, onClose, selectedDialec
   const inputRef = useRef(null);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+    return () => {
+      voiceEngine.stopSpeaking();
+      voiceEngine.stopListening();
+    };
+  }, []);
+
+  const handleClose = () => {
+    voiceEngine.stopSpeaking();
+    voiceEngine.stopListening();
+    onClose();
+  };
 
   useEffect(() => {
     if (isOpen) {
+      setMessages([
+        {
+          id: 1,
+          sender: 'ai',
+          text: lang === 'en'
+            ? 'Hello! I am VoxAI — your personal financial advisor. Ask me anything about savings, micro-loans, or weather insurance.'
+            : 'আসসালামু আলাইকুম! আমি VoxAI — আপনার আর্থিক উপদেষ্টা। সঞ্চয়, লোন, বা দুর্যোগ সুরক্ষা সংক্রান্ত যেকোনো প্রশ্ন করুন।',
+          timestamp: lang === 'en' ? 'Just now' : 'এইমাত্র',
+        },
+      ]);
       aiCounselor.resetHistory();
       setTimeout(() => inputRef.current?.focus(), 300);
     }
-  }, [isOpen]);
+  }, [isOpen, lang]);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
 
   if (!isOpen) return null;
 
@@ -37,18 +55,20 @@ export default function FinancialCounselorChat({ isOpen, onClose, selectedDialec
     const text = (queryText || inputText).trim();
     if (!text) return;
 
-    const userMsg = { id: Date.now(), sender: 'user', text, timestamp: 'এইমাত্র' };
+    const userMsg = { id: Date.now(), sender: 'user', text, timestamp: lang === 'en' ? 'Just now' : 'এইমাত্র' };
     setMessages(prev => [...prev, userMsg]);
     setInputText('');
     setIsThinking(true);
 
     const reply = await aiCounselor.askCounselor(text, selectedDialect, wallet);
 
-    const aiMsg = { id: Date.now() + 1, sender: 'ai', text: reply, timestamp: 'এইমাত্র' };
+    const aiMsg = { id: Date.now() + 1, sender: 'ai', text: reply, timestamp: lang === 'en' ? 'Just now' : 'এইমাত্র' };
     setMessages(prev => [...prev, aiMsg]);
     setIsThinking(false);
 
-    if (soundEnabled) voiceEngine.speakText(reply, 'bn-BD', false);
+    if (soundEnabled) {
+      voiceEngine.speakText(reply, lang === 'en' ? 'en-US' : 'bn-BD', false);
+    }
   };
 
   const handleMic = () => {
@@ -59,7 +79,7 @@ export default function FinancialCounselorChat({ isOpen, onClose, selectedDialec
       setIsListening(true);
       if (soundEnabled) voiceEngine.playSoundboxChime();
       voiceEngine.startListening({
-        lang: 'bn-BD',
+        lang: lang === 'en' ? 'en-US' : 'bn-BD',
         onResult: (res) => {
           if (res.finalText) {
             setIsListening(false);
@@ -96,10 +116,12 @@ export default function FinancialCounselorChat({ isOpen, onClose, selectedDialec
                   <span className="badge" style={{ background: 'rgba(245,158,11,0.1)', color: '#fbbf24', border: '1px solid rgba(245,158,11,0.2)' }}>Local AI</span>
                 )}
               </div>
-              <p className="text-xs" style={{ color: '#64748b' }}>ভয়েস ও টেক্সটে বুদ্ধিমান পরামর্শ</p>
+              <p className="text-xs" style={{ color: '#64748b' }}>
+                {lang === 'en' ? 'Smart advice via voice & text' : 'ভয়েস ও টেক্সটে বুদ্ধিমান পরামর্শ'}
+              </p>
             </div>
           </div>
-          <button onClick={onClose} className="btn-ghost p-2">
+          <button onClick={handleClose} className="btn-ghost p-2">
             <X size={17} />
           </button>
         </div>
@@ -143,12 +165,12 @@ export default function FinancialCounselorChat({ isOpen, onClose, selectedDialec
                 <p>{msg.text}</p>
                 {msg.sender === 'ai' && soundEnabled && (
                   <button
-                    onClick={() => voiceEngine.speakText(msg.text, 'bn-BD', false)}
+                    onClick={() => voiceEngine.speakText(msg.text, lang === 'en' ? 'en-US' : 'bn-BD', false)}
                     className="mt-2 flex items-center gap-1 text-[11px] font-medium transition"
                     style={{ color: '#8b5cf6' }}
                   >
                     <Volume2 size={11} />
-                    পুনরায় শুনুন
+                    {lang === 'en' ? 'Listen Again' : 'পুনরায় শুনুন'}
                   </button>
                 )}
               </div>
@@ -198,7 +220,7 @@ export default function FinancialCounselorChat({ isOpen, onClose, selectedDialec
               type="text"
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
-              placeholder="যেকোনো প্রশ্ন লিখুন বা মুখে বলুন..."
+              placeholder={lang === 'en' ? 'Type a question or speak...' : 'যেকোনো প্রশ্ন লিখুন বা মুখে বলুন...'}
               className="input-field flex-1"
             />
 

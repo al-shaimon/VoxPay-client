@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { DIALECTS } from '../constants/data';
 import { voiceEngine } from '../services/voiceEngine';
+import { useLanguage } from '../i18n/LanguageContext';
 
 export default function Navbar({
   wallet,
@@ -18,6 +19,7 @@ export default function Navbar({
   onOpenCounselor,
   onOpenMlSpec
 }) {
+  const { lang, setLang, t } = useLanguage();
   const [showBalance, setShowBalance] = useState(false);
   const [dialectDropdownOpen, setDialectDropdownOpen] = useState(false);
   const balanceTimerRef = useRef(null);
@@ -70,11 +72,11 @@ export default function Navbar({
   }, [dialectDropdownOpen]);
 
   const navLinks = [
-    { id: 'overview', label: 'হোম',       icon: Home },
-    { id: 'loan',     label: 'AI লোন',    icon: Landmark },
-    { id: 'voice',    label: 'ভয়েস পে',   icon: Mic },
-    { id: 'weather',  label: 'ওয়েদার',    icon: CloudRain },
-    { id: 'history',  label: 'স্টেটমেন্ট', icon: Clock },
+    { id: 'overview', label: t('nav.home', 'হোম'),       icon: Home },
+    { id: 'loan',     label: t('nav.loan', 'AI লোন'),    icon: Landmark },
+    { id: 'voice',    label: t('nav.voice', 'ভয়েস পে'),   icon: Mic },
+    { id: 'weather',  label: t('nav.weather', 'ওয়েদার'),  icon: CloudRain },
+    { id: 'history',  label: t('nav.history', 'স্টেটমেন্ট'), icon: Clock },
   ];
 
   return (
@@ -96,7 +98,7 @@ export default function Navbar({
               <span className="text-base sm:text-lg font-black tracking-tight text-white">
                 Vox<span style={{ color: '#e2136e' }}>Pay</span>
               </span>
-              <span className="badge badge-brand hidden md:inline-flex text-[10px]">Voice-First MFS</span>
+              <span className="badge badge-brand hidden md:inline-flex text-[10px]">{t('nav.tag', 'Voice-First MFS')}</span>
             </div>
           </div>
 
@@ -110,12 +112,12 @@ export default function Navbar({
                 border: showBalance ? '1px solid rgba(226,19,110,0.3)' : '1px solid rgba(255,255,255,0.09)',
                 boxShadow: showBalance ? '0 0 24px -6px rgba(226,19,110,0.3)' : 'none'
               }}
-              title="ব্যালেন্স জানতে ক্লিক করুন"
+              title={t('nav.tapBalance', 'ব্যালেন্স জানতে ক্লিক করুন')}
             >
               <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-black text-white shrink-0" style={{ background: '#e2136e' }}>৳</div>
               <div className="text-left">
                 <p className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: '#f472b6' }}>
-                  {showBalance ? 'ওয়ালেট ব্যালেন্স' : 'ব্যালেন্স দেখুন'}
+                  {showBalance ? t('nav.walletBalance', 'ওয়ালেট ব্যালেন্স') : t('nav.checkBalance', 'ব্যালেন্স দেখুন')}
                 </p>
                 <div className="h-5 flex items-center">
                   {showBalance ? (
@@ -139,6 +141,42 @@ export default function Navbar({
           {/* Right Actions */}
           <div className="flex items-center gap-1 sm:gap-2 shrink-0">
 
+            {/* Bilingual Toggle Switch (বাংলা | English) */}
+            <div className="flex items-center p-0.5 rounded-xl bg-white/5 border border-white/10 shrink-0">
+              <button
+                onClick={() => {
+                  setLang('bn');
+                  setSelectedDialect('standard-bangla');
+                  if (soundEnabled) voiceEngine.speakText('বাংলা ভাষা সক্রিয় করা হয়েছে', 'bn-BD', false);
+                }}
+                className={`px-2 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1 ${
+                  lang === 'bn'
+                    ? 'bg-pink-600 text-white shadow-sm shadow-pink-600/30'
+                    : 'text-slate-400 hover:text-slate-200'
+                }`}
+                title="বাংলা ভাষা"
+              >
+                <span>🇧🇩</span>
+                <span className="hidden xs:inline">বাংলা</span>
+              </button>
+              <button
+                onClick={() => {
+                  setLang('en');
+                  setSelectedDialect('english');
+                  if (soundEnabled) voiceEngine.speakText('English language activated', 'en-US', false);
+                }}
+                className={`px-2 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1 ${
+                  lang === 'en'
+                    ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-600/30'
+                    : 'text-slate-400 hover:text-slate-200'
+                }`}
+                title="English language"
+              >
+                <span>🇬🇧</span>
+                <span className="hidden xs:inline">EN</span>
+              </button>
+            </div>
+
             {/* AI Advisor Button */}
             <button
               onClick={onOpenCounselor}
@@ -147,8 +185,8 @@ export default function Navbar({
               title="Groq AI Financial Counselor"
             >
               <Sparkles size={13} className="animate-spin-slow text-yellow-300 shrink-0" />
-              <span className="hidden sm:inline">AI Advisor</span>
-              <span className="sm:hidden font-bold text-[11px]">AI</span>
+              <span className="hidden sm:inline">{t('nav.aiAdvisor', 'AI Advisor')}</span>
+              <span className="sm:hidden font-bold text-[11px]">{t('nav.ai', 'AI')}</span>
             </button>
 
             {/* Dialect Selector */}
@@ -156,7 +194,7 @@ export default function Navbar({
               <button
                 onClick={() => setDialectDropdownOpen(!dialectDropdownOpen)}
                 className="btn-ghost gap-1 px-2 sm:px-2.5 py-1.5 shrink-0"
-                title="ভাষা নির্বাচন"
+                title={t('nav.dialect', 'ভাষা নির্বাচন')}
                 aria-haspopup="true"
                 aria-expanded={dialectDropdownOpen}
               >
@@ -181,7 +219,7 @@ export default function Navbar({
                 >
                   <div className="px-3 py-2 border-b border-white/5 mb-1.5 flex items-center justify-between">
                     <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
-                      ভাষা ও আঞ্চলিক ভয়েস
+                      {t('nav.dialect', 'ভাষা ও আঞ্চলিক ভয়েস')}
                     </span>
                     <span className="text-[10px] text-pink-400 font-semibold px-1.5 py-0.5 rounded bg-pink-500/10">5টি ডায়ালেক্ট</span>
                   </div>
@@ -194,7 +232,10 @@ export default function Navbar({
                           onClick={() => {
                             setSelectedDialect(dialect.id);
                             setDialectDropdownOpen(false);
-                            if (soundEnabled) voiceEngine.speakText(`${dialect.name} সেট হয়েছে`, dialect.voiceCode, false);
+                            if (soundEnabled) {
+                              const msg = dialect.id === 'english' ? `${dialect.name} configured` : `${dialect.name} সেট হয়েছে`;
+                              voiceEngine.speakText(msg, dialect.voiceCode, false);
+                            }
                           }}
                           className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs transition-all duration-150 ${
                             isSelected
@@ -222,7 +263,7 @@ export default function Navbar({
             <button
               onClick={() => setSoundEnabled(!soundEnabled)}
               className="btn-ghost p-1.5 sm:p-2 shrink-0"
-              title={soundEnabled ? 'সাউন্ড চালু' : 'সাউন্ড বন্ধ'}
+              title={soundEnabled ? t('nav.soundOn', 'সাউন্ড চালু') : t('nav.soundOff', 'সাউন্ড বন্ধ')}
             >
               {soundEnabled ? <Volume2 size={15} style={{ color: '#e2136e' }} /> : <VolumeX size={15} />}
             </button>
@@ -231,7 +272,7 @@ export default function Navbar({
             <button
               onClick={onOpenMlSpec}
               className="btn-ghost p-2 hidden md:flex shrink-0"
-              title="ML API Spec"
+              title={t('nav.mlSpec', 'ML API Spec')}
             >
               <Code2 size={15} style={{ color: '#22d3ee' }} />
             </button>
@@ -256,7 +297,7 @@ export default function Navbar({
               </div>
               <div className="text-left min-w-0">
                 <p className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: '#f472b6' }}>
-                  {showBalance ? 'ওয়ালেট ব্যালেন্স' : 'ব্যালেন্স জানতে ট্যাপ করুন'}
+                  {showBalance ? t('nav.walletBalance', 'ওয়ালেট ব্যালেন্স') : t('nav.tapBalance', 'ব্যালেন্স জানতে ট্যাপ করুন')}
                 </p>
                 <div className="h-5 flex items-center min-w-0">
                   {showBalance ? (
@@ -273,7 +314,7 @@ export default function Navbar({
                     </div>
                   ) : (
                     <span className="text-xs font-semibold text-slate-400">
-                      ••••••• ৳ (ট্যাপ করুন)
+                      ••••••• ৳ ({t('nav.tapBalance', 'ট্যাপ করুন')})
                     </span>
                   )}
                 </div>
@@ -283,7 +324,7 @@ export default function Navbar({
             {/* Right Toggle Indicator */}
             <div className="flex items-center gap-1.5 pl-2 shrink-0">
               <span className="text-[11px] font-medium" style={{ color: showBalance ? '#f472b6' : '#94a3b8' }}>
-                {showBalance ? 'লুকান' : 'দেখুন'}
+                {showBalance ? t('nav.hide', 'লুকান') : t('nav.show', 'দেখুন')}
               </span>
               <div className="w-6 h-6 rounded-lg flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.06)' }}>
                 {showBalance ? <EyeOff size={13} style={{ color: '#f472b6' }} /> : <Eye size={13} style={{ color: '#94a3b8' }} />}

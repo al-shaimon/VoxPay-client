@@ -1,11 +1,45 @@
 // Voice Engine Service: Speech Recognition, Text-To-Speech, Web Audio Soundbox Chime, & Biometric Verification
+import { apiUrl } from '../constants/api';
 
 class VoiceEngineService {
   constructor() {
     this.recognition = null;
     this.isListening = false;
     this.audioContext = null;
+    this.currentAudio = null;
+    this.currentSource = null;
+    this.audioCache = new Map(); // Client-side ArrayBuffer cache for instant 0ms playback
+    this.currentAbortController = null;
+    this.currentSpeechId = 0;
     this.initRecognition();
+    this.setupUserGestureUnlock();
+  }
+
+  // Pre-warm / unlock Web Audio Context on the very first user interaction
+  setupUserGestureUnlock() {
+    if (typeof window !== 'undefined') {
+      const unlock = () => {
+        this.ensureAudioContext();
+      };
+      window.addEventListener('pointerdown', unlock, { once: true, passive: true });
+      window.addEventListener('click', unlock, { once: true, passive: true });
+    }
+  }
+
+  async ensureAudioContext() {
+    try {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtx) return null;
+      if (!this.audioContext) {
+        this.audioContext = new AudioCtx();
+      }
+      if (this.audioContext.state === 'suspended') {
+        await this.audioContext.resume();
+      }
+      return this.audioContext;
+    } catch (e) {
+      return null;
+    }
   }
 
   initRecognition() {
@@ -22,38 +56,32 @@ class VoiceEngineService {
   // Play realistic Merchant Soundbox chime using Web Audio API
   async playSoundboxChime() {
     try {
-      const AudioCtx = window.AudioContext || window.webkitAudioContext;
-      if (!AudioCtx) return;
-      if (!this.audioContext) {
-        this.audioContext = new AudioCtx();
-      }
-      if (this.audioContext.state === 'suspended') {
-        await this.audioContext.resume();
-      }
+      const ctx = await this.ensureAudioContext();
+      if (!ctx) return;
 
-      const now = this.audioContext.currentTime;
+      const now = ctx.currentTime;
 
       // Note 1: High crisp ding (880Hz - A5)
-      const osc1 = this.audioContext.createOscillator();
-      const gain1 = this.audioContext.createGain();
+      const osc1 = ctx.createOscillator();
+      const gain1 = ctx.createGain();
       osc1.type = 'sine';
       osc1.frequency.setValueAtTime(880, now);
       gain1.gain.setValueAtTime(0.3, now);
       gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
       osc1.connect(gain1);
-      gain1.connect(this.audioContext.destination);
+      gain1.connect(ctx.destination);
       osc1.start(now);
       osc1.stop(now + 0.35);
 
       // Note 2: Harmonic resolving chime (1318.5Hz - E6)
-      const osc2 = this.audioContext.createOscillator();
-      const gain2 = this.audioContext.createGain();
+      const osc2 = ctx.createOscillator();
+      const gain2 = ctx.createGain();
       osc2.type = 'triangle';
       osc2.frequency.setValueAtTime(1318.5, now + 0.15);
       gain2.gain.setValueAtTime(0.35, now + 0.15);
       gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.65);
       osc2.connect(gain2);
-      gain2.connect(this.audioContext.destination);
+      gain2.connect(ctx.destination);
       osc2.start(now + 0.15);
       osc2.stop(now + 0.65);
     } catch (e) {
@@ -61,40 +89,270 @@ class VoiceEngineService {
     }
   }
 
-  // Speak voice feedback in Bangla or English with Soundbox prefix
-  speakText(text, dialectCode = 'bn-BD', playChimeFirst = true) {
-    if (typeof window === 'undefined' || !window.speechSynthesis) return;
+  // Stop any active audio playback, cancel speech synthesis, and abort in-flight fetch immediately
+  stopSpeaking() {
+    this.currentSpeechId++;
+    if (this.currentAbortController) {
+      try {
+        this.currentAbortController.abort();
+      } catch (e) {
+        // ignore
+      }
+      this.currentAbortController = null;
+    }
+    if (this.currentSource) {
+      try {
+        this.currentSource.stop();
+        this.currentSource.disconnect();
+      } catch (e) {
+        // ignore
+      }
+      this.currentSource = null;
+    }
+    if (this.currentAudio) {
+      try {
+        this.currentAudio.pause();
+        this.currentAudio.currentTime = 0;
+        this.currentAudio.src = '';
+      } catch (e) {
+        // ignore
+      }
+      this.currentAudio = null;
+    }
+    if (typeof window !== 'undefined' && window.speechSynthesis) {
+      try {
+        window.speechSynthesis.cancel();
+      } catch (e) {
+        // ignore
+      }
+    }
+  }
 
-    if (playChimeFirst) {
-      this.playSoundboxChime();
+  // Normalize text into natural, fluid spoken language (remove markdown, convert currency/fractions)
+  normalizeForSpeech(text, lang = 'bn') {
+    if (!text) return '';
+    const isEn = lang.startsWith('en') || lang === 'english';
+    let clean = text.replace(/[*#_`~>]+/g, ' ');
+
+    if (isEn) {
+      clean = clean
+        .replace(/৳\s*([0-9,]+)/g, '$1 Taka')
+        .replace(/¥\s*([0-9,]+)/g, '$1 Yuan')
+        .replace(/\/+\s*900/g, ' out of 900 ')
+        .replace(/\/+\s*৯০০/g, ' out of 900 ')
+        .replace(/%/g, ' percent ')
+        .replace(/[•·|]/g, ', ')
+        .replace(/\bEMI\b/gi, 'EMI installment')
+        .replace(/\bZKP\b/gi, 'Zero Knowledge Proof')
+        .replace(/\bAI\b/g, 'A.I.');
+    } else {
+      clean = clean
+        .replace(/৳\s*([0-9,]+)/g, '$1 টাকা')
+        .replace(/¥\s*([0-9,]+)/g, '$1 ইউয়ান')
+        .replace(/\/+\s*৯০০/g, ' ৯০০ এর মধ্যে ')
+        .replace(/\/+\s*900/g, ' ৯০০ এর মধ্যে ')
+        .replace(/%/g, ' শতাংশ ')
+        .replace(/[•·|]/g, ', ')
+        .replace(/\bEMI\b/gi, 'ইএমআই কিস্তি')
+        .replace(/\bZKP\b/gi, 'জিরো নলেজ প্রুফ')
+        .replace(/\bAI\b/g, 'এআই');
     }
 
-    // Cancel current speaking
-    window.speechSynthesis.cancel();
+    return clean.replace(/\s+/g, ' ').trim();
+  }
 
-    setTimeout(() => {
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.rate = 0.95;
-      utterance.pitch = 1.05;
+  // Play audio buffer via Web Audio API (immune to autoplay restrictions)
+  async playWebAudio(arrayBuffer) {
+    try {
+      const ctx = await this.ensureAudioContext();
+      if (!ctx) return false;
 
-      const voices = window.speechSynthesis.getVoices();
-      // Try to match Bengali voice if applicable, else fallback to standard
-      if (dialectCode.startsWith('bn')) {
-        const banglaVoice = voices.find(v => v.lang.includes('bn') || v.lang.includes('Bengali') || v.name.includes('Bangla'));
-        if (banglaVoice) {
-          utterance.voice = banglaVoice;
-        } else {
-          // If no local Bangla voice is installed, use an available high quality voice with Bangla text
-          const generic = voices.find(v => v.lang.startsWith('en'));
-          if (generic) utterance.voice = generic;
-        }
-      } else {
-        const enVoice = voices.find(v => v.lang.startsWith('en'));
-        if (enVoice) utterance.voice = enVoice;
+      // Stop previous active source
+      if (this.currentSource) {
+        try {
+          this.currentSource.stop();
+          this.currentSource.disconnect();
+        } catch (e) {}
+        this.currentSource = null;
       }
 
-      window.speechSynthesis.speak(utterance);
-    }, playChimeFirst ? 450 : 0);
+      // decodeAudioData needs a slice clone because it detaches the buffer
+      const bufferCopy = arrayBuffer.slice(0);
+      const audioBuffer = await ctx.decodeAudioData(bufferCopy);
+
+      const source = ctx.createBufferSource();
+      source.buffer = audioBuffer;
+      source.connect(ctx.destination);
+
+      source.onended = () => {
+        if (this.currentSource === source) {
+          this.currentSource = null;
+        }
+      };
+
+      source.start(0);
+      this.currentSource = source;
+      return true;
+    } catch (err) {
+      console.warn('Web Audio playback error:', err);
+      return false;
+    }
+  }
+
+  // Fallback blob audio playback via HTML5 Audio
+  playBlobAudio(arrayBuffer) {
+    return new Promise((resolve) => {
+      try {
+        const blob = new Blob([arrayBuffer], { type: 'audio/mpeg' });
+        const blobUrl = URL.createObjectURL(blob);
+        const audio = new Audio(blobUrl);
+        this.currentAudio = audio;
+
+        audio.onended = () => {
+          URL.revokeObjectURL(blobUrl);
+          if (this.currentAudio === audio) this.currentAudio = null;
+        };
+
+        const p = audio.play();
+        if (p && p.then) {
+          p.then(() => resolve(true)).catch(() => {
+            URL.revokeObjectURL(blobUrl);
+            resolve(false);
+          });
+        } else {
+          resolve(true);
+        }
+      } catch (e) {
+        resolve(false);
+      }
+    });
+  }
+
+  // Fallback to browser SpeechSynthesis ONLY if genuine matching voice exists
+  fallbackBrowserSpeech(cleanText, dialectCode = 'bn-BD') {
+    if (typeof window === 'undefined' || !window.speechSynthesis) return;
+
+    window.speechSynthesis.cancel();
+
+    const isEn = dialectCode.startsWith('en') || dialectCode === 'english' || dialectCode === 'en-US';
+    const voices = window.speechSynthesis.getVoices();
+    let selectedVoice = null;
+
+    if (!isEn) {
+      selectedVoice = voices.find(v =>
+        (v.lang && (v.lang.includes('bn') || v.lang.includes('Bengali'))) ||
+        (v.name && (v.name.includes('Bangla') || v.name.includes('Bengali')))
+      );
+
+      // CRITICAL: NEVER allow an English voice to read Bengali text.
+      // Doing so results in a robotic American-accented buzzing sound.
+      if (!selectedVoice) {
+        console.warn('No native Bengali voice found in browser speech synthesis. Skipping robotic fallback.');
+        return;
+      }
+    } else {
+      selectedVoice = voices.find(v =>
+        v.lang && v.lang.startsWith('en') &&
+        (v.name.includes('Natural') || v.name.includes('Neural') || v.name.includes('Google') || v.name.includes('Samantha') || v.name.includes('Aria'))
+      ) || voices.find(v => v.lang && v.lang.startsWith('en'));
+    }
+
+    const utterance = new SpeechSynthesisUtterance(cleanText);
+    if (selectedVoice) utterance.voice = selectedVoice;
+    utterance.rate = 1.15; // Natural lively pace, never sluggish
+    utterance.pitch = 1.0;
+
+    window.speechSynthesis.speak(utterance);
+  }
+
+  // Speak voice feedback in authentic human voice using neural audio streaming with instant caching
+  async speakText(text, dialectCode = 'bn-BD', playChimeFirst = true) {
+    if (typeof window === 'undefined') return;
+
+    // 1. Immediately cancel any prior speech or in-flight fetch
+    this.stopSpeaking();
+    const speechId = ++this.currentSpeechId;
+    this.currentAbortController = new AbortController();
+    const signal = this.currentAbortController.signal;
+
+    // Ensure audio context is ready
+    await this.ensureAudioContext();
+
+    const isEn = dialectCode.startsWith('en') || dialectCode === 'english' || dialectCode === 'en-US';
+    const lang = isEn ? 'en' : 'bn';
+    const clean = this.normalizeForSpeech(text, lang);
+    if (!clean) return;
+
+    // 2. Play chime asynchronously if requested
+    if (playChimeFirst) {
+      this.playSoundboxChime().catch(() => {});
+    }
+
+    const cacheKey = `${lang}:${clean}`;
+
+    // 3. INSTANT CACHE HIT (0ms): If audio was already fetched or played, play immediately!
+    if (this.audioCache.has(cacheKey)) {
+      if (this.currentSpeechId !== speechId) return;
+      const cachedBuffer = this.audioCache.get(cacheKey);
+      await this.playWebAudio(cachedBuffer);
+      return;
+    }
+
+    // 4. Primary: Stream authentic Neural Audio from Backend
+    let audioBuffer = null;
+    try {
+      const backendUrl = apiUrl(`/api/tts?text=${encodeURIComponent(clean)}&lang=${lang}`);
+      const res = await fetch(backendUrl, { signal });
+      if (res.ok) {
+        const arrayBuffer = await res.arrayBuffer();
+        if (arrayBuffer && arrayBuffer.byteLength > 200) {
+          audioBuffer = arrayBuffer;
+        }
+      }
+    } catch (e) {
+      if (e.name === 'AbortError') return; // User navigated away, abort cleanly
+      console.warn('Backend TTS error, falling back:', e);
+    }
+
+    // Check if user cancelled/left section while fetching
+    if (this.currentSpeechId !== speechId) return;
+
+    // 5. Secondary fallback: Direct Google Neural Audio stream (client-side)
+    if (!audioBuffer) {
+      try {
+        const directUrl = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(clean.slice(0, 180))}&tl=${lang}&client=tw-ob`;
+        const directRes = await fetch(directUrl, { signal });
+        if (directRes.ok) {
+          const arrayBuffer = await directRes.arrayBuffer();
+          if (arrayBuffer && arrayBuffer.byteLength > 200) {
+            audioBuffer = arrayBuffer;
+          }
+        }
+      } catch (e) {
+        if (e.name === 'AbortError') return;
+      }
+    }
+
+    // Check again if cancelled
+    if (this.currentSpeechId !== speechId) return;
+
+    // 6. If audio buffer retrieved, save in client-side memory cache and play
+    if (audioBuffer) {
+      if (this.audioCache.size < 200) {
+        this.audioCache.set(cacheKey, audioBuffer);
+      }
+      let played = await this.playWebAudio(audioBuffer);
+      if (!played && this.currentSpeechId === speechId) {
+        played = await this.playBlobAudio(audioBuffer);
+      }
+      if (played) return;
+    }
+
+    // Check again before fallback
+    if (this.currentSpeechId !== speechId) return;
+
+    // 7. Last resort: Browser speech synthesis (never reads Bengali with English voice)
+    this.fallbackBrowserSpeech(clean, dialectCode);
   }
 
   // Start real browser speech recognition with callback

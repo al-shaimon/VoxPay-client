@@ -5,21 +5,30 @@ import {
   ArrowRight, ShieldCheck, TrendingUp, Satellite, Zap
 } from 'lucide-react';
 import { SAMPLE_VOICE_COMMANDS } from '../constants/data';
+import { useLanguage } from '../i18n/LanguageContext';
 
 export default function HomeScreen({ wallet, transactions, onActionClick, onTriggerVoice, onSwitchTab }) {
+  const { lang, t } = useLanguage();
 
   const coreServices = [
-    { id: 'send_money',       name: 'টাকা পাঠান',    enName: 'Send',         icon: Send,          color: '#e2136e', bg: 'rgba(226,19,110,0.15)' },
+    { id: 'send_money',       name: 'টাকা পাঠান',    enName: 'Send Money',   icon: Send,          color: '#e2136e', bg: 'rgba(226,19,110,0.15)' },
     { id: 'recharge',         name: 'রিচার্জ',        enName: 'Recharge',     icon: Smartphone,    color: '#3b82f6', bg: 'rgba(59,130,246,0.15)' },
-    { id: 'ai_loan',          name: 'AI লোন',         enName: 'Micro-Loan',   icon: Landmark,      color: '#10b981', bg: 'rgba(16,185,129,0.15)' },
+    { id: 'ai_loan',          name: 'AI লোন',         enName: 'AI Loan',      icon: Landmark,      color: '#10b981', bg: 'rgba(16,185,129,0.15)' },
     { id: 'cash_out',         name: 'ক্যাশ আউট',     enName: 'Cash Out',     icon: ArrowDownLeft, color: '#f59e0b', bg: 'rgba(245,158,11,0.15)' },
-    { id: 'cross_border_ecny',name: 'e-CNY',          enName: 'CBDC',         icon: Coins,         color: '#f97316', bg: 'rgba(249,115,22,0.15)' },
-    { id: 'weather_protection',name:'ওয়েদার শিল্ড',  enName: 'Weather',      icon: CloudRain,     color: '#06b6d4', bg: 'rgba(6,182,212,0.15)' },
-    { id: 'zkp_verify',       name: 'ZKP প্রাইভেসি', enName: 'Privacy',      icon: ShieldAlert,   color: '#8b5cf6', bg: 'rgba(139,92,246,0.15)' },
-    { id: 'emergency_relief', name: 'জরুরি ত্রাণ',   enName: 'Aid',          icon: HeartHandshake,color: '#ef4444', bg: 'rgba(239,68,68,0.15)' },
+    { id: 'cross_border_ecny',name: 'e-CNY',          enName: 'e-CNY',        icon: Coins,         color: '#f97316', bg: 'rgba(249,115,22,0.15)' },
+    { id: 'weather_protection',name:'ওয়েদার শিল্ড',  enName: 'Weather Shield',icon: CloudRain,   color: '#06b6d4', bg: 'rgba(6,182,212,0.15)' },
+    { id: 'zkp_verify',       name: 'ZKP প্রাইভেসি', enName: 'ZKP Privacy',  icon: ShieldAlert,   color: '#8b5cf6', bg: 'rgba(139,92,246,0.15)' },
+    { id: 'emergency_relief', name: 'জরুরি ত্রাণ',   enName: 'Disaster Relief',icon: HeartHandshake,color: '#ef4444', bg: 'rgba(239,68,68,0.15)' },
   ];
 
   const recentTxs = transactions.slice(0, 4);
+
+  const sampleCommands = lang === 'en' ? [
+    { text: 'Send 500 Taka to Rahim', dialect: 'english' },
+    { text: 'I need a 5,000 Taka micro loan', dialect: 'english' },
+    { text: 'Pay 850 Taka electricity bill', dialect: 'english' },
+    { text: 'Remit 200 e-CNY to Shenzhen', dialect: 'english' },
+  ] : SAMPLE_VOICE_COMMANDS;
 
   return (
     <div className="space-y-5 animate-fadeIn">
@@ -37,34 +46,34 @@ export default function HomeScreen({ wallet, transactions, onActionClick, onTrig
             <div className="flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-blink" />
               <span className="text-xs font-bold uppercase tracking-widest" style={{ color: '#f472b6' }}>
-                Regional Voice Engine · Active
+                {t('home.voiceActive', 'Regional Voice Engine · Active')}
               </span>
             </div>
             <h1 className="text-xl sm:text-3xl font-black text-white leading-tight">
-              শুধু কণ্ঠে বলুন —<br className="hidden sm:block" />
-              <span style={{ color: '#f472b6' }}>তাৎক্ষণিক পেমেন্ট</span>
+              {t('home.heroTitle1', 'শুধু কণ্ঠে বলুন —')}<br className="hidden sm:block" />
+              <span style={{ color: '#f472b6' }}>{t('home.heroTitle2', 'তাৎক্ষণিক পেমেন্ট')}</span>
             </h1>
             <p className="text-sm text-slate-400 max-w-sm">
-              প্রমিত বাংলা, চাঁটগাঁইয়া বা Banglish-এ কথা বলুন। কোনো PIN দরকার নেই।
+              {t('home.heroSubtitle', 'প্রমিত বাংলা, চাঁটগাঁইয়া বা ইংরেজিতে কথা বলুন। কোনো PIN দরকার নেই।')}
             </p>
           </div>
 
           <button
-            onClick={() => onTriggerVoice('রহিমকে ৫০০ টাকা পাঠাও')}
+            onClick={() => onTriggerVoice(lang === 'en' ? 'Send 500 Taka to Rahim' : 'রহিমকে ৫০০ টাকা পাঠাও')}
             className="flex items-center gap-2.5 px-5 py-3.5 rounded-2xl font-bold text-sm text-white flex-shrink-0 self-start sm:self-center transition-all active:scale-95"
             style={{ background: 'linear-gradient(135deg, #e2136e, #9333ea)', boxShadow: '0 8px 30px -6px rgba(226,19,110,0.6)' }}
           >
             <div className="flex items-end gap-0.5 h-5">
               {[...Array(5)].map((_, i) => <div key={i} className="voice-bar" style={{ animationDelay: `${i * 0.1}s` }} />)}
             </div>
-            <span>মুখে বলুন</span>
+            <span>{t('home.speakNow', 'মুখে বলুন')}</span>
           </button>
         </div>
 
         {/* Quick Voice Chips */}
         <div className="mt-4 pt-4 flex items-center gap-2 overflow-x-auto scrollbar-none" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-          <span className="text-[11px] text-slate-500 font-semibold flex-shrink-0 hidden sm:block">চেষ্টা করুন:</span>
-          {SAMPLE_VOICE_COMMANDS.map((cmd, i) => (
+          <span className="text-[11px] text-slate-500 font-semibold flex-shrink-0 hidden sm:block">{t('home.trySaying', 'চেষ্টা করুন:')}</span>
+          {sampleCommands.map((cmd, i) => (
             <button
               key={i}
               onClick={() => onTriggerVoice(cmd.text, cmd.dialect)}
@@ -80,9 +89,9 @@ export default function HomeScreen({ wallet, transactions, onActionClick, onTrig
       {/* ── Balance Summary Cards ─────────────────────────── */}
       <div className="grid grid-cols-3 gap-3">
         {[
-          { label: 'BDT ব্যালেন্স', value: `৳${wallet.bdtBalance.toLocaleString('en-IN')}`, color: '#f472b6', icon: '৳' },
-          { label: 'e-CNY ব্যালেন্স', value: `¥${wallet.ecnyBalance}`, color: '#22d3ee', icon: '¥' },
-          { label: 'Green টোকেন', value: `${wallet.greenTokens ?? 0} GT`, color: '#34d399', icon: '🌿' },
+          { label: t('home.mainBdt', 'BDT ব্যালেন্স'), value: `৳${wallet.bdtBalance.toLocaleString('en-IN')}`, color: '#f472b6', icon: '৳' },
+          { label: t('home.ecny', 'e-CNY ব্যালেন্স'), value: `¥${wallet.ecnyBalance}`, color: '#22d3ee', icon: '¥' },
+          { label: t('home.greenTokens', 'Green টোকেন'), value: `${wallet.greenTokens ?? 0} GT`, color: '#34d399', icon: '🌿' },
         ].map((item, i) => (
           <div key={i} className="card p-4 text-center">
             <p className="text-[11px] text-slate-500 font-medium mb-1">{item.label}</p>
@@ -94,12 +103,13 @@ export default function HomeScreen({ wallet, transactions, onActionClick, onTrig
       {/* ── Core Services Grid ────────────────────────────── */}
       <div className="card">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-sm font-bold text-white">মূল সেবাসমূহ</h2>
-          <span className="text-[11px] text-slate-500">১-ট্যাপে ব্যবহার করুন</span>
+          <h2 className="text-sm font-bold text-white">{t('home.quickServices', 'মূল সেবাসমূহ')}</h2>
+          <span className="text-[11px] text-slate-500">{lang === 'en' ? '1-Tap FinTech Access' : '১-ট্যাপে ব্যবহার করুন'}</span>
         </div>
         <div className="grid grid-cols-4 sm:grid-cols-8 gap-2">
           {coreServices.map((svc) => {
             const Icon = svc.icon;
+            const label = lang === 'en' ? svc.enName : svc.name;
             return (
               <button
                 key={svc.id}
@@ -113,7 +123,7 @@ export default function HomeScreen({ wallet, transactions, onActionClick, onTrig
                   style={{ background: svc.bg, color: svc.color }}>
                   <Icon size={22} />
                 </div>
-                <span className="text-[11px] font-semibold text-slate-300 text-center leading-tight">{svc.name}</span>
+                <span className="text-[11px] font-semibold text-slate-300 text-center leading-tight">{label}</span>
               </button>
             );
           })}
@@ -130,20 +140,20 @@ export default function HomeScreen({ wallet, transactions, onActionClick, onTrig
               <div className="w-7 h-7 rounded-xl flex items-center justify-center" style={{ background: 'rgba(16,185,129,0.15)' }}>
                 <ShieldCheck size={15} style={{ color: '#10b981' }} />
               </div>
-              <span className="text-sm font-bold text-white">AI ক্রেডিট স্কোর</span>
+              <span className="text-sm font-bold text-white">{lang === 'en' ? 'AI Credit Score' : 'AI ক্রেডিট স্কোর'}</span>
             </div>
-            <span className="badge badge-green">✓ বিশ্বস্ত</span>
+            <span className="badge badge-green">{lang === 'en' ? '✓ Trusted' : '✓ বিশ্বস্ত'}</span>
           </div>
 
           <div className="rounded-2xl p-4 mb-3" style={{ background: 'rgba(16,185,129,0.06)', border: '1px solid rgba(16,185,129,0.2)' }}>
             <div className="flex items-end justify-between">
               <div>
                 <span className="text-4xl font-black" style={{ color: '#10b981' }}>{wallet.trustScore ?? 785}</span>
-                <span className="text-slate-500 text-sm ml-1">/ ৯০০</span>
+                <span className="text-slate-500 text-sm ml-1">{lang === 'en' ? '/ 900' : '/ ৯০০'}</span>
               </div>
               <div className="text-right">
-                <p className="text-[11px] text-slate-400">অনুমোদিত সীমা</p>
-                <p className="text-base font-bold" style={{ color: '#f472b6' }}>৳২৫,০০০</p>
+                <p className="text-[11px] text-slate-400">{lang === 'en' ? 'Pre-Approved Limit' : 'অনুমোদিত সীমা'}</p>
+                <p className="text-base font-bold" style={{ color: '#f472b6' }}>৳25,000</p>
               </div>
             </div>
             <div className="mt-2 progress-bar">
@@ -153,12 +163,12 @@ export default function HomeScreen({ wallet, transactions, onActionClick, onTrig
 
           <div className="grid grid-cols-2 gap-2 text-xs mb-3">
             <div className="p-2.5 rounded-xl" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
-              <p className="text-slate-500 text-[10px]">রিচার্জ স্কোর</p>
-              <p className="font-bold text-white mt-0.5">৯২ / ১০০</p>
+              <p className="text-slate-500 text-[10px]">{lang === 'en' ? 'Recharge Score' : 'রিচার্জ স্কোর'}</p>
+              <p className="font-bold text-white mt-0.5">{lang === 'en' ? '92 / 100' : '৯২ / ১০০'}</p>
             </div>
             <div className="p-2.5 rounded-xl" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
-              <p className="text-slate-500 text-[10px]">বিল পরিশোধ</p>
-              <p className="font-bold text-white mt-0.5">৮৮ / ১০০</p>
+              <p className="text-slate-500 text-[10px]">{lang === 'en' ? 'Utility Score' : 'বিল পরিশোধ'}</p>
+              <p className="font-bold text-white mt-0.5">{lang === 'en' ? '88 / 100' : '৮৮ / ১০০'}</p>
             </div>
           </div>
 
@@ -167,7 +177,7 @@ export default function HomeScreen({ wallet, transactions, onActionClick, onTrig
             className="w-full btn-primary py-2.5"
           >
             <Landmark size={14} />
-            লোন আবেদন করুন
+            {t('credit.applyLoan', 'লোন আবেদন করুন')}
             <ArrowRight size={14} />
           </button>
         </div>
@@ -183,14 +193,14 @@ export default function HomeScreen({ wallet, transactions, onActionClick, onTrig
                   <Satellite size={15} style={{ color: '#06b6d4' }} />
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold text-white">স্যাটেলাইট ওয়েদার শিল্ড</h3>
-                  <p className="text-[11px] text-slate-400">দুর্যোগে কিস্তি স্বয়ংক্রিয় ফ্রিজ</p>
+                  <h3 className="text-sm font-bold text-white">{lang === 'en' ? 'Satellite Weather Shield' : 'স্যাটেলাইট ওয়েদার শিল্ড'}</h3>
+                  <p className="text-[11px] text-slate-400">{lang === 'en' ? 'Automated disaster EMI freeze' : 'দুর্যোগে কিস্তি স্বয়ংক্রিয় ফ্রিজ'}</p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
                 <span className="badge badge-cyan">LIVE</span>
                 <button onClick={() => onSwitchTab('weather')} className="btn-ghost px-2.5 py-1.5 text-xs">
-                  দেখুন <ArrowRight size={11} />
+                  {lang === 'en' ? 'View' : 'দেখুন'} <ArrowRight size={11} />
                 </button>
               </div>
             </div>
@@ -199,12 +209,12 @@ export default function HomeScreen({ wallet, transactions, onActionClick, onTrig
           {/* Recent Transactions */}
           <div className="card">
             <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-bold text-white">সাম্প্রতিক লেনদেন</h3>
+              <h3 className="text-sm font-bold text-white">{t('home.recentTx', 'সাম্প্রতিক লেনদেন')}</h3>
               <button
                 onClick={() => onSwitchTab('history')}
                 className="text-xs font-semibold" style={{ color: '#f472b6' }}
               >
-                সব দেখুন →
+                {t('home.viewAll', 'সব দেখুন')} →
               </button>
             </div>
             <div className="space-y-2">

@@ -4,6 +4,7 @@ import {
   ArrowRight, Sparkles, Volume2, Fingerprint, Lock, Cpu
 } from 'lucide-react';
 import { voiceEngine } from '../services/voiceEngine';
+import { useLanguage } from '../i18n/LanguageContext';
 import confetti from 'canvas-confetti';
 
 export default function VoiceAssistantModal({
@@ -14,10 +15,23 @@ export default function VoiceAssistantModal({
   onExecuteAction,
   soundEnabled
 }) {
+  const { lang, t } = useLanguage();
   const [parsedData, setParsedData] = useState(null);
   const [biometricData, setBiometricData] = useState(null);
   const [isVerifying, setIsVerifying] = useState(true);
   const [isSuccess, setIsSuccess] = useState(false);
+
+  // Stop audio whenever modal closes or unmounts
+  useEffect(() => {
+    return () => {
+      voiceEngine.stopSpeaking();
+    };
+  }, []);
+
+  const handleClose = () => {
+    voiceEngine.stopSpeaking();
+    onClose();
+  };
 
   useEffect(() => {
     if (isOpen && transcript) {
@@ -35,14 +49,30 @@ export default function VoiceAssistantModal({
       // Simulate brief cryptographic & biometric verification time
       const timer = setTimeout(() => {
         setIsVerifying(false);
-        if (soundEnabled && parsed?.feedback) {
-          voiceEngine.speakText(parsed.feedback, 'bn-BD', true);
+        if (soundEnabled && parsed) {
+          const isEn = lang === 'en' || selectedDialect === 'english';
+          const matchPercent = bio?.confidenceScore || '98.5';
+
+          if (isEn) {
+            const recipientPart = parsed.recipient ? `Recipient: ${parsed.recipient}. ` : '';
+            const amountPart = parsed.amount ? `Amount: ${parsed.amount.toLocaleString('en-IN')} Taka. ` : '';
+            const speech = `${recipientPart}${amountPart}Biometric voice-print matched ${matchPercent} percent. Vocal cords organic and verified. Please confirm below to proceed.`;
+            voiceEngine.speakText(speech, 'en-US', true);
+          } else {
+            const recipientPart = parsed.recipient ? `প্রাপক: ${parsed.recipient}। ` : '';
+            const amountPart = parsed.amount ? `পরিমাণ: ${parsed.amount.toLocaleString('en-IN')} টাকা। ` : '';
+            const speech = `${parsed.feedback} শনাক্তকৃত কার্যক্রম: ${parsed.intentName}। ${recipientPart}${amountPart}বায়োমেট্রিক ভয়েস-প্রিন্ট ${matchPercent} শতাংশ সফলভাবে ম্যাচ হয়েছে। ভোকাল কর্ড অর্গানিক ও নিরাপদ। নিশ্চিত করতে নিচে কনফার্ম করুন।`;
+            voiceEngine.speakText(speech, 'bn-BD', true);
+          }
         }
       }, 700);
 
-      return () => clearTimeout(timer);
+      return () => {
+        clearTimeout(timer);
+        voiceEngine.stopSpeaking();
+      };
     }
-  }, [isOpen, transcript, selectedDialect]);
+  }, [isOpen, transcript, selectedDialect, lang]);
 
   if (!isOpen || !transcript) return null;
 
@@ -62,12 +92,29 @@ export default function VoiceAssistantModal({
 
     if (soundEnabled) {
       voiceEngine.playSoundboxChime();
-      voiceEngine.speakText('লেনদেন সফলভাবে সম্পন্ন হয়েছে।', 'bn-BD', false);
+      const isEn = lang === 'en' || selectedDialect === 'english';
+      if (isEn) {
+        const amountPart = parsedData?.amount ? `${parsedData.amount.toLocaleString('en-IN')} Taka ` : '';
+        const recipientPart = parsedData?.recipient ? `to ${parsedData.recipient} ` : '';
+        voiceEngine.speakText(
+          `Congratulations! Payment of ${amountPart}${recipientPart}completed successfully. Verified by Zero Knowledge Proof on-chain.`,
+          'en-US',
+          false
+        );
+      } else {
+        const amountPart = parsedData?.amount ? `${parsedData.amount.toLocaleString('en-IN')} টাকা ` : '';
+        const recipientPart = parsedData?.recipient ? `${parsedData.recipient} এর কাছে ` : '';
+        voiceEngine.speakText(
+          `অভিনন্দন! লেনদেন সফলভাবে সম্পন্ন হয়েছে। ${recipientPart}${amountPart}সফলভাবে হস্তান্তর করা হয়েছে। এটি জিরো নলেজ প্রুফ দ্বারা ভেরিফাইড।`,
+          'bn-BD',
+          false
+        );
+      }
     }
 
     setTimeout(() => {
       onExecuteAction(parsedData);
-      onClose();
+      handleClose();
     }, 1200);
   };
 
@@ -80,7 +127,7 @@ export default function VoiceAssistantModal({
         
         {/* Close button */}
         <button
-          onClick={onClose}
+          onClick={handleClose}
           className="absolute top-4 right-4 p-2 text-slate-400 hover:text-white rounded-full bg-slate-800/60 hover:bg-slate-800 transition"
         >
           <X size={18} />
@@ -93,10 +140,10 @@ export default function VoiceAssistantModal({
           </div>
           <div>
             <h2 className="text-base font-bold text-white">
-              VoxPay ভয়েস ইঞ্জিন অ্যানালাইসিস
+              {t('voice.title', 'VoxPay ভয়েস ইঞ্জিন অ্যানালাইসিস')}
             </h2>
             <p className="text-xs text-slate-400">
-              Biometric Voice-Print & Intent Execution Engine
+              {t('voice.sub', 'Biometric Voice-Print & Intent Execution Engine')}
             </p>
           </div>
         </div>
@@ -104,7 +151,7 @@ export default function VoiceAssistantModal({
         {/* User's Spoken Utterance Box */}
         <div className="rounded-2xl bg-slate-950 p-4 border border-slate-800 mb-4">
           <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1 flex items-center justify-between">
-            <span>আপনার উচ্চারিত কণ্ঠস্বর (Recognized Audio):</span>
+            <span>{t('voice.recognized', 'আপনার উচ্চারিত কণ্ঠস্বর (Recognized Audio):')}</span>
             <span className="text-brand-400 font-mono">Dialect: {selectedDialect}</span>
           </p>
           <p className="text-base sm:text-lg font-medium text-white italic">
@@ -117,17 +164,17 @@ export default function VoiceAssistantModal({
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-slate-300 flex items-center space-x-1.5">
               <Fingerprint size={14} className="text-emerald-400" />
-              <span>বায়োমেট্রিক ভয়েস-প্রিন্ট ম্যাচিং:</span>
+              <span>{t('voice.bioMatch', 'বায়োমেট্রিক ভয়েস-প্রিন্ট ম্যাচিং:')}</span>
             </span>
             {isVerifying ? (
               <span className="text-xs text-cyan-400 font-medium animate-pulse flex items-center space-x-1">
                 <Activity size={12} className="animate-spin" />
-                <span>ম্যাচিং হচ্ছে...</span>
+                <span>{t('voice.matching', 'ম্যাচিং হচ্ছে...')}</span>
               </span>
             ) : (
               <span className="text-xs font-bold text-emerald-400 flex items-center space-x-1">
                 <CheckCircle size={13} />
-                <span>{biometricData?.confidenceScore}% Matched (Pass)</span>
+                <span>{biometricData?.confidenceScore}% {t('voice.matched', 'Matched (Pass)')}</span>
               </span>
             )}
           </div>
@@ -135,15 +182,15 @@ export default function VoiceAssistantModal({
           {/* Telemetry Grid */}
           <div className="grid grid-cols-2 gap-2 text-[11px]">
             <div className="bg-slate-900/80 p-2 rounded-xl border border-slate-800">
-              <span className="text-slate-400 block">Deepfake Guard:</span>
+              <span className="text-slate-400 block">{t('voice.deepfake', 'Deepfake Guard:')}</span>
               <span className="font-semibold text-emerald-300">
-                {isVerifying ? 'Analyzing breath...' : 'Organic Vocal Cords'}
+                {isVerifying ? (lang === 'en' ? 'Analyzing breath...' : 'বায়োলজিক্যাল স্পেকট্রাম বিশ্লেষণ...') : t('voice.organic', 'Organic Vocal Cords')}
               </span>
             </div>
             <div className="bg-slate-900/80 p-2 rounded-xl border border-slate-800">
-              <span className="text-slate-400 block">Stress / Duress Check:</span>
+              <span className="text-slate-400 block">{t('voice.stress', 'Stress / Duress Check:')}</span>
               <span className="font-semibold text-cyan-300">
-                {isVerifying ? 'Scanning tremor...' : 'Normal Calm (No Coercion)'}
+                {isVerifying ? (lang === 'en' ? 'Scanning tremor...' : 'মাইক্রো-কম্পন স্ক্যানিং...') : t('voice.normalCalm', 'Normal Calm (No Coercion)')}
               </span>
             </div>
           </div>
@@ -153,13 +200,13 @@ export default function VoiceAssistantModal({
         {parsedData && (
           <div className="rounded-2xl bg-gradient-to-b from-brand-950/40 to-slate-900 p-4 border border-brand-500/30 mb-5">
             <p className="text-[11px] font-semibold text-brand-300 uppercase tracking-wider mb-2">
-              শনাক্তকৃত আর্থিক কার্যক্রম (Parsed Intent):
+              {t('voice.parsedIntent', 'শনাক্তকৃত আর্থিক কার্যক্রম (Parsed Intent):')}
             </p>
             <div className="flex items-center justify-between">
               <div>
                 <h4 className="text-sm font-bold text-white">{parsedData.intentName}</h4>
                 <p className="text-xs text-slate-300 mt-0.5">
-                  প্রাপক / লক্ষ্য: <span className="font-medium text-white">{parsedData.recipient}</span>
+                  {t('voice.recipient', 'প্রাপক / লক্ষ্য:')} <span className="font-medium text-white">{parsedData.recipient}</span>
                 </p>
               </div>
               {parsedData.amount && (
@@ -167,7 +214,7 @@ export default function VoiceAssistantModal({
                   <span className="text-lg sm:text-xl font-extrabold text-brand-400">
                     ৳{parsedData.amount.toLocaleString('en-IN')}
                   </span>
-                  <p className="text-[10px] text-slate-400">০% হিডেন ফি</p>
+                  <p className="text-[10px] text-slate-400">{t('voice.zeroFee', '০% হিডেন ফি')}</p>
                 </div>
               )}
             </div>
@@ -181,10 +228,10 @@ export default function VoiceAssistantModal({
         {/* Action Buttons */}
         <div className="flex items-center space-x-3">
           <button
-            onClick={onClose}
+            onClick={handleClose}
             className="w-1/3 py-2.5 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs sm:text-sm font-semibold transition"
           >
-            বাতিল
+            {t('voice.cancel', 'বাতিল')}
           </button>
 
           <button
@@ -199,12 +246,12 @@ export default function VoiceAssistantModal({
             {isSuccess ? (
               <>
                 <CheckCircle size={16} />
-                <span>লেনদেন সম্পন্ন হয়েছে!</span>
+                <span>{t('voice.success', 'লেনদেন সফলভাবে সম্পন্ন হয়েছে!')}</span>
               </>
             ) : (
               <>
                 <ShieldCheck size={16} />
-                <span>ভয়েস কনফার্ম করুন (Confirm)</span>
+                <span>{t('voice.confirmBtn', 'বায়োমেট্রিক পেমেন্ট নিশ্চিত করুন')}</span>
               </>
             )}
           </button>

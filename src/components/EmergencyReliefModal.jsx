@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   X, HeartHandshake, ShieldCheck, CheckCircle2, 
   MapPin, AlertCircle, Sparkles 
 } from 'lucide-react';
 import { voiceEngine } from '../services/voiceEngine';
+import { useLanguage } from '../i18n/LanguageContext';
 import confetti from 'canvas-confetti';
 
 export default function EmergencyReliefModal({ 
@@ -12,8 +13,20 @@ export default function EmergencyReliefModal({
   onClaimAid, 
   soundEnabled 
 }) {
+  const { lang, t } = useLanguage();
   const [isProcessing, setIsProcessing] = useState(false);
   const [isClaimed, setIsClaimed] = useState(false);
+
+  useEffect(() => {
+    return () => {
+      voiceEngine.stopSpeaking();
+    };
+  }, []);
+
+  const handleClose = () => {
+    voiceEngine.stopSpeaking();
+    onClose();
+  };
 
   if (!isOpen) return null;
 
@@ -39,7 +52,10 @@ export default function EmergencyReliefModal({
 
       if (soundEnabled) {
         voiceEngine.playSoundboxChime();
-        voiceEngine.speakText('জরুরি সহায়তা ৫,০০০ টাকা আপনার ওয়ালেটে হস্তান্তর সম্পন্ন হয়েছে।', 'bn-BD', false);
+        const speech = lang === 'en'
+          ? 'Autonomous emergency disaster aid of 5,000 Taka transferred to your wallet with zero interest. Verified via satellite geo-fencing.'
+          : 'স্বায়ত্তশাসিত জরুরি দুর্যোগ সহায়তা ৫,০০০ টাকা শূন্য শতাংশ সুদে আপনার ওয়ালেটে হস্তান্তর সম্পন্ন হয়েছে। স্যাটেলাইট জিও-ফেন্সিং দ্বারা এটি যাচাইকৃত।';
+        voiceEngine.speakText(speech, lang === 'en' ? 'en-US' : 'bn-BD', false);
       }
 
       onClaimAid(5000);
@@ -55,7 +71,7 @@ export default function EmergencyReliefModal({
         
         {/* Close Button */}
         <button
-          onClick={onClose}
+          onClick={handleClose}
           className="absolute top-4 right-4 p-2 text-slate-400 hover:text-white rounded-full bg-slate-800/60 hover:bg-slate-800 transition"
         >
           <X size={18} />
@@ -68,10 +84,10 @@ export default function EmergencyReliefModal({
           </div>
           <div>
             <h3 className="text-base sm:text-lg font-bold text-white">
-              স্বায়ত্তশাসিত জরুরি ত্রাণ ফান্ড
+              {lang === 'en' ? 'Autonomous Emergency Relief' : 'স্বায়ত্তশাসিত জরুরি ত্রাণ ফান্ড'}
             </h3>
             <p className="text-xs text-slate-400">
-              Autonomous Disaster Emergency Aid & Zero-Interest Liquidity
+              {lang === 'en' ? 'Disaster emergency aid & 0% interest liquidity' : 'Autonomous Disaster Emergency Aid & Zero-Interest Liquidity'}
             </p>
           </div>
         </div>
@@ -81,42 +97,44 @@ export default function EmergencyReliefModal({
           <div className="flex items-center justify-between text-slate-200">
             <span className="flex items-center space-x-1 font-bold text-red-400">
               <MapPin size={14} />
-              <span>জিও-ফেন্স ভেরিফিকেশন:</span>
+              <span>{lang === 'en' ? 'Geo-Fence Verification:' : 'জিও-ফেন্স ভেরিফিকেশন:'}</span>
             </span>
             <span className="font-mono text-emerald-400">PASSED (Disaster Zone)</span>
           </div>
           <p className="text-[11px] text-slate-400 leading-relaxed">
-            স্যাটেলাইট ও মোবাইল নেটওয়ার্ক টাওয়ার ডেটা অনুসারে আপনার ওয়ালেটটি বর্তমানে প্রাকৃতিক দুর্যোগ সতর্কতা জোনে তালিকাভুক্ত।
+            {lang === 'en'
+              ? 'Based on satellite & cellular tower data, your wallet is currently situated in an active disaster warning zone.'
+              : 'স্যাটেলাইট ও মোবাইল নেটওয়ার্ক টাওয়ার ডেটা অনুসারে আপনার ওয়ালেটটি বর্তমানে প্রাকৃতিক দুর্যোগ সতর্কতা জোনে তালিকাভুক্ত।'}
           </p>
         </div>
 
         {/* Grant Details */}
         <div className="p-4 rounded-2xl bg-gradient-to-b from-red-950/30 to-slate-950 border border-red-500/30 text-center mb-5">
           <span className="text-xs text-red-300 font-semibold uppercase tracking-wider block">
-            বরাদ্দকৃত সুদমুক্ত জরুরি অনুদান
+            {lang === 'en' ? 'Allocated Zero-Interest Emergency Grant' : 'বরাদ্দকৃত সুদমুক্ত জরুরি অনুদান'}
           </span>
           <div className="text-3xl sm:text-4xl font-extrabold text-white my-1 tracking-tight">
             ৳ ৫,০০০
           </div>
           <p className="text-[11px] text-slate-400">
-            কোনো সুদের হার নেই (০% Interest) • তাৎক্ষণিক উত্তোলনযোগ্য
+            {lang === 'en' ? '0% Interest Rate • Instant Withdrawal to Wallet' : 'কোনো সুদের হার নেই (০% Interest) • তাৎক্ষণিক উত্তোলনযোগ্য'}
           </p>
         </div>
 
         {isClaimed && (
           <div className="p-3 rounded-2xl bg-emerald-950/50 border border-emerald-800 text-xs text-emerald-300 mb-4 flex items-center space-x-2">
             <CheckCircle2 size={16} className="text-emerald-400 flex-shrink-0" />
-            <span>জরুরি সহায়তা ৳৫,০০০ সরাসরি ওয়ালেটে যোগ হয়েছে!</span>
+            <span>{lang === 'en' ? 'Emergency aid ৳5,000 successfully added to wallet!' : 'জরুরি সহায়তা ৳৫,০০০ সরাসরি ওয়ালেটে যোগ হয়েছে!'}</span>
           </div>
         )}
 
         {/* Buttons */}
         <div className="flex items-center space-x-3">
           <button
-            onClick={onClose}
+            onClick={handleClose}
             className="w-1/3 py-2.5 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs sm:text-sm font-semibold transition"
           >
-            {isClaimed ? 'বন্ধ' : 'বাতিল'}
+            {isClaimed ? (lang === 'en' ? 'Close' : 'বন্ধ') : (lang === 'en' ? 'Cancel' : 'বাতিল')}
           </button>
 
           {!isClaimed && (
@@ -126,11 +144,11 @@ export default function EmergencyReliefModal({
               className="w-2/3 py-2.5 px-4 rounded-xl bg-gradient-to-r from-red-600 via-rose-600 to-pink-600 hover:from-red-500 hover:to-rose-500 text-white text-xs sm:text-sm font-bold flex items-center justify-center space-x-2 shadow-lg transition"
             >
               {isProcessing ? (
-                <span>বিতরণ হচ্ছে...</span>
+                <span>{lang === 'en' ? 'Disbursing...' : 'বিতরণ হচ্ছে...'}</span>
               ) : (
                 <>
                   <ShieldCheck size={16} />
-                  <span>ত্রাণ গ্রহণ করুন (Claim Aid)</span>
+                  <span>{lang === 'en' ? 'Claim Relief Aid' : 'ত্রাণ গ্রহণ করুন (Claim Aid)'}</span>
                 </>
               )}
             </button>

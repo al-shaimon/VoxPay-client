@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Mic, MicOff, ShieldCheck, Activity, Sparkles, Volume2, Fingerprint } from 'lucide-react';
 import { DIALECTS, SAMPLE_VOICE_COMMANDS } from '../constants/data';
 import { voiceEngine } from '../services/voiceEngine';
+import { useLanguage } from '../i18n/LanguageContext';
 
 export default function VoiceHeroBar({ 
   selectedDialect, 
@@ -9,10 +10,18 @@ export default function VoiceHeroBar({
   onTriggerVoiceCommand, 
   soundEnabled 
 }) {
+  const { lang, t } = useLanguage();
   const [isListening, setIsListening] = useState(false);
   const [audioBars, setAudioBars] = useState([30, 50, 75, 45, 85, 60, 40, 70, 55, 80, 45, 65, 35, 75, 50, 90]);
 
   const currentDialectObj = DIALECTS.find(d => d.id === selectedDialect) || DIALECTS[0];
+
+  useEffect(() => {
+    return () => {
+      voiceEngine.stopListening();
+      voiceEngine.stopSpeaking();
+    };
+  }, []);
 
   useEffect(() => {
     let interval;
@@ -37,7 +46,7 @@ export default function VoiceHeroBar({
       }
 
       voiceEngine.startListening({
-        lang: currentDialectObj.voiceCode,
+        lang: lang === 'en' ? 'en-US' : currentDialectObj.voiceCode,
         onResult: (res) => {
           if (res.finalText) {
             setIsListening(false);
@@ -47,7 +56,8 @@ export default function VoiceHeroBar({
         onError: () => {
           setTimeout(() => {
             setIsListening(false);
-            onTriggerVoiceCommand(currentDialectObj.sampleVoicePrompt, selectedDialect);
+            const prompt = lang === 'en' ? 'Send 500 Taka to Abdul Rahim' : currentDialectObj.sampleVoicePrompt;
+            onTriggerVoiceCommand(prompt, selectedDialect);
           }, 600);
         },
         onEnd: () => {
@@ -68,7 +78,8 @@ export default function VoiceHeroBar({
             onClick={() => {
               setSelectedDialect(d.id);
               if (soundEnabled) {
-                voiceEngine.speakText(`ভাষা ${d.name} সেট করা হয়েছে`, d.voiceCode, false);
+                const msg = lang === 'en' ? `Language set to ${d.name}` : `ভাষা ${d.name} সেট করা হয়েছে`;
+                voiceEngine.speakText(msg, lang === 'en' ? 'en-US' : d.voiceCode, false);
               }
             }}
             className={`px-4 py-2 rounded-2xl text-xs sm:text-sm font-semibold flex items-center space-x-1.5 transition ${
@@ -92,13 +103,13 @@ export default function VoiceHeroBar({
         <div className="space-y-1 relative z-10">
           <div className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-slate-800 border border-slate-700 text-xs font-medium text-slate-300 mb-2">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-            <span>ভয়েস বায়োমেট্রিক ইঞ্জিন অ্যাক্টিভ ({currentDialectObj.name})</span>
+            <span>{lang === 'en' ? `Voice Biometric Engine · Active (${currentDialectObj.name})` : `ভয়েস বায়োমেট্রিক ইঞ্জিন অ্যাক্টিভ (${currentDialectObj.name})`}</span>
           </div>
           <h2 className="text-xl sm:text-3xl font-black text-white">
-            কণ্ঠে লেনদেন করুন — পিনবিহীন ও নিরাপদ
+            {lang === 'en' ? 'Transact by Voice — PIN-Free & Secure' : 'কণ্ঠে লেনদেন করুন — পিনবিহীন ও নিরাপদ'}
           </h2>
           <p className="text-xs sm:text-sm text-slate-400 max-w-lg mx-auto">
-            ট্যাপ করে বাংলায় বলুন — টাকা পাঠানো, লোন আবেদন, ইউটিলিটি বিল বা ব্যালেন্স অনুসন্ধান
+            {lang === 'en' ? 'Tap and speak — Send money, apply for loans, pay utility bills, or check balance' : 'ট্যাপ করে বাংলায় বলুন — টাকা পাঠানো, লোন আবেদন, ইউটিলিটি বিল বা ব্যালেন্স অনুসন্ধান'}
           </p>
         </div>
 
@@ -125,7 +136,7 @@ export default function VoiceHeroBar({
               <Mic size={42} className="text-white" />
             )}
             <span className="text-xs sm:text-sm font-bold text-white mt-1.5 uppercase tracking-wider">
-              {isListening ? 'শুনছি...' : 'ট্যাপ করুন'}
+              {isListening ? (lang === 'en' ? 'Listening...' : 'শুনছি...') : (lang === 'en' ? 'Tap to Speak' : 'ট্যাপ করুন')}
             </span>
           </button>
         </div>
@@ -147,11 +158,11 @@ export default function VoiceHeroBar({
         <div className="flex flex-wrap items-center justify-center gap-2.5 pt-2 text-xs">
           <span className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-emerald-950/60 border border-emerald-800/60 text-emerald-300 font-medium">
             <ShieldCheck size={14} className="text-emerald-400" />
-            <span>ভয়েস-প্রিন্ট বায়োমেট্রিক: ৯৮.৪% ম্যাচ</span>
+            <span>{lang === 'en' ? 'Voice-Print Biometric: 98.4% Match' : 'ভয়েস-প্রিন্ট বায়োমেট্রিক: ৯৮.৪% ম্যাচ'}</span>
           </span>
           <span className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-cyan-950/60 border border-cyan-800/60 text-cyan-300 font-medium">
             <Activity size={14} className="text-cyan-400" />
-            <span>ডিপফেক লাইভনেস গার্ড: অরগানিক হিউম্যান</span>
+            <span>{lang === 'en' ? 'Deepfake Liveness Guard: Organic Human' : 'ডিপফেক লাইভনেস গার্ড: অরগানিক হিউম্যান'}</span>
           </span>
         </div>
       </div>
@@ -159,7 +170,7 @@ export default function VoiceHeroBar({
       {/* Dialect Voice Prompts (Quick Click to Test) */}
       <div className="rounded-3xl bg-slate-900 border border-slate-800 p-5 text-left space-y-3 shadow-xl">
         <span className="text-xs sm:text-sm font-bold text-slate-300 block">
-          ক্লিক করে আঞ্চলিক ভাষায় ভয়েস কমান্ড টেস্ট করুন (Click to simulate speech):
+          {lang === 'en' ? 'Click to simulate regional voice command:' : 'ক্লিক করে আঞ্চলিক ভাষায় ভয়েস কমান্ড টেস্ট করুন (Click to simulate speech):'}
         </span>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           {SAMPLE_VOICE_COMMANDS.map((cmd, i) => (

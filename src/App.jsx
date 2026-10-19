@@ -21,14 +21,30 @@ import { INITIAL_WALLET, INITIAL_TRANSACTIONS } from './constants/data';
 import { apiUrl } from './constants/api';
 import { zkpEngine } from './services/zkpSimulator';
 import { voiceEngine } from './services/voiceEngine';
+import { useLanguage } from './i18n/LanguageContext';
 import confetti from 'canvas-confetti';
 
 export default function App() {
+  const { lang, t } = useLanguage();
   const [wallet, setWallet] = useState(INITIAL_WALLET);
   const [transactions, setTransactions] = useState(INITIAL_TRANSACTIONS);
-  const [selectedDialect, setSelectedDialect] = useState('standard-bangla');
+  const [selectedDialect, setSelectedDialect] = useState(lang === 'en' ? 'english' : 'standard-bangla');
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [activeTab, setActiveTab] = useState('overview'); // 'overview' | 'loan' | 'voice' | 'weather' | 'history'
+
+  // Stop any playing audio instantly when navigating between sections
+  useEffect(() => {
+    voiceEngine.stopSpeaking();
+  }, [activeTab]);
+
+  // Synchronize dialect when language changes
+  useEffect(() => {
+    if (lang === 'en' && selectedDialect !== 'english') {
+      setSelectedDialect('english');
+    } else if (lang === 'bn' && selectedDialect === 'english') {
+      setSelectedDialect('standard-bangla');
+    }
+  }, [lang]);
 
   // Modals state
   const [voiceModalOpen, setVoiceModalOpen] = useState(false);
@@ -278,7 +294,12 @@ export default function App() {
 
     if (soundEnabled) {
       voiceEngine.playSoundboxChime();
-      voiceEngine.speakText(`অভিনন্দন! আপনার একাউন্টে ${amount} টাকা লোন তাৎক্ষণিক যুক্ত হয়েছে।`, 'bn-BD', false);
+      const emi = Math.round((amount * 1.02) / 3);
+      const isEn = lang === 'en';
+      const speechMsg = isEn
+        ? `Congratulations! ${amount.toLocaleString('en-IN')} Taka instant AI loan has been credited to your wallet. Repayable in 3 monthly installments of ${emi.toLocaleString('en-IN')} Taka. Zero percent interest for the first 30 days.`
+        : `অভিনন্দন! আপনার ওয়ালেটে ${amount.toLocaleString('en-IN')} টাকা তাৎক্ষণিক এআই লোন যুক্ত হয়েছে। ৩টি মাসিক কিস্তিতে প্রতি মাসে ${emi.toLocaleString('en-IN')} টাকা পরিশোধযোগ্য। প্রথম ৩০ দিন শূন্য শতাংশ সুদ। ট্রানজেকশন অন-চেইনে ভেরিফাইড।`;
+      voiceEngine.speakText(speechMsg, isEn ? 'en-US' : 'bn-BD', false);
     }
 
     const newTx = {

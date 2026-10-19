@@ -3,10 +3,12 @@ import {
   Send, ArrowDownLeft, Smartphone, Landmark, 
   CloudRain, ShieldAlert, Coins, Speaker, Sparkles, HeartHandshake 
 } from 'lucide-react';
+import { useLanguage } from '../i18n/LanguageContext';
 
 export default function QuickActionsGrid({ 
   onActionClick 
 }) {
+  const { lang, t } = useLanguage();
   const actions = [
     {
       id: 'send_money',
@@ -14,7 +16,7 @@ export default function QuickActionsGrid({
       bnName: 'টাকা পাঠানো',
       icon: Send,
       color: 'from-pink-500 to-rose-600',
-      tag: 'Voice PIN-Free',
+      tag: lang === 'en' ? 'Voice PIN-Free' : 'ভয়েস পিনবিহীন',
       badgeColor: 'bg-rose-500/20 text-rose-300'
     },
     {
@@ -32,7 +34,7 @@ export default function QuickActionsGrid({
       bnName: 'এআই ঋণ ও স্কোর',
       icon: Landmark,
       color: 'from-emerald-500 to-teal-600',
-      tag: '0% First 30 Days',
+      tag: lang === 'en' ? '0% First 30 Days' : '০% প্রথম ৩০ দিন',
       badgeColor: 'bg-emerald-500/20 text-emerald-300'
     },
     {
@@ -41,7 +43,7 @@ export default function QuickActionsGrid({
       bnName: 'আবহাওয়া ঝুঁকি সুরক্ষা',
       icon: CloudRain,
       color: 'from-sky-500 to-blue-600',
-      tag: 'Satellite Auto-Freeze',
+      tag: lang === 'en' ? 'Satellite Auto-Freeze' : 'স্যাটেলাইট অটো-ফ্রিজ',
       badgeColor: 'bg-blue-500/20 text-blue-300'
     },
     {
@@ -68,7 +70,7 @@ export default function QuickActionsGrid({
       bnName: 'সাউন্ডবক্স মার্চেন্ট পে',
       icon: Speaker,
       color: 'from-fuchsia-500 to-pink-600',
-      tag: 'Bangla Audio Chime',
+      tag: lang === 'en' ? 'Audio Chime' : 'অডিও স্বীকৃতি',
       badgeColor: 'bg-pink-500/20 text-pink-300'
     },
     {
@@ -77,7 +79,7 @@ export default function QuickActionsGrid({
       bnName: 'স্বায়ত্তশাসিত ত্রাণ ফান্ড',
       icon: HeartHandshake,
       color: 'from-red-500 to-rose-700',
-      tag: '0% Interest Aid',
+      tag: lang === 'en' ? '0% Interest Aid' : '০% সুদে সহায়তা',
       badgeColor: 'bg-rose-500/20 text-rose-300'
     }
   ];
@@ -86,10 +88,10 @@ export default function QuickActionsGrid({
     <div className="my-6">
       <div className="flex items-center justify-between mb-3 px-1">
         <h3 className="text-sm sm:text-base font-bold text-white flex items-center space-x-2">
-          <span>মূল সেবাসমূহ (Core MFS Services)</span>
+          <span>{lang === 'en' ? 'Core Financial Services' : 'মূল সেবাসমূহ (Core MFS Services)'}</span>
         </h3>
         <span className="text-xs text-slate-400">
-          ভয়েস বা ট্যাপ করুন
+          {lang === 'en' ? 'Voice or tap' : 'ভয়েস বা ট্যাপ করুন'}
         </span>
       </div>
 
@@ -115,10 +117,10 @@ export default function QuickActionsGrid({
               {/* Titles */}
               <div className="mt-2.5">
                 <p className="text-xs sm:text-sm font-bold text-slate-100 group-hover:text-brand-300 transition-colors">
-                  {act.bnName}
+                  {lang === 'en' ? act.name : act.bnName}
                 </p>
                 <p className="text-[11px] text-slate-400 font-medium">
-                  {act.name}
+                  {lang === 'en' ? act.bnName : act.name}
                 </p>
               </div>
             </button>
